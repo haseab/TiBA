@@ -6,7 +6,7 @@ I have always been an avid gamer since I can remember. I used to play so much th
 
 After 2 years, I have accumulated over 50 000 actions which is a significant amount of data considering that this data about **me**. Exactly one year after I started tracking my time, I no longer was playing video games, and I had this brilliant idea. I could have an automatic time analyzer which can do all the way from analyzing my behaviour and telling me behaviours that I'm not even conscious of, to being my personal assistant and validating my time tracking **live** with my Google Calendar and seeing whether I'm doing what I'm supposed to be doing at any given moment. 
 
-Research in psychology states that we are so unaware of our own patterns and intricacies that we are prone to self-deception. Self deception is significantly damaging in the long term since our view from reality becomes more and more distorted. Our motive can become a complete mystery to us sometimes and this is why I created this project called the TiBA - Time-tracking Behaviour Analyzer. This project allows not only the insight into bad habits, but any behavioural pattern in general. Our thoughts can be traced from our actions.
+Research in psychology states that we are so unaware of our own patterns and intricacies that we are prone to self-deception. Self deception is significantly damaging in the long term since our view from reality becomes more and more distorted. Our motive can become a complete mystery to us, and this is why I created this project called the TiBA - Time-tracking Behaviour Analyzer. This project allows not only the insight into bad habits, but any behavioural pattern in general. 
 
 ### Description of Code
 
