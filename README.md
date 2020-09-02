@@ -12,6 +12,17 @@ After 2 years, I have accumulated over 50 000 actions which is a significant amo
 
 Research in psychology states that we are so unaware of our own patterns and intricacies that we are prone to self-deception. Self deception is significantly damaging in the long term since our view from reality becomes more and more distorted. Our motive can become a complete mystery to us, and this is why I created this project called the TiBA - Time-tracking Behaviour Analyzer. This project allows not only the insight into bad habits, but any behavioural pattern in general so that we can be more self aware of our actions
 
+## Table of Contents
+- Overview
+  - Description
+  - Different Classes
+  - Requirements
+  
+- Example
+  - Initial Conditions
+  - Instantiation
+  
+
 ### Description of Code
 
 This program essentially abstracts the physical actions that I do (e.g. Prepare food, watch YouTube video, Text Mom, etc.) into one whole behaviour. As input, it takes in a table of tracked time data, groups commonly clustered actions as "behaviours" and then returns a list of common behaviours that you have and their frequency
