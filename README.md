@@ -19,11 +19,11 @@ This program essentially abstracts the physical actions that I do (e.g. Prepare 
 So for example, this is an example of a very common behaviour that I have every morning:
 
 - **Behaviour 1**
- - Action: Sleep (1:00 AM --> 5:47 AM)
- - Action: Washroom (5:47 AM --> 6:04 AM)
- - Action: Brushing Teeth (6:04 AM --> 6:08 AM)
- - Action: Flossing Teeth (6:08 AM --> 6:16 AM)
- - Action: Making Bed (6:16 AM --> 6:18 AM)
+  - Action: Sleep          (1:00 AM --> 5:47 AM)
+  - Action: Washroom       (5:47 AM --> 6:04 AM)
+  - Action: Brushing Teeth (6:04 AM --> 6:08 AM)
+  - Action: Flossing Teeth (6:08 AM --> 6:16 AM)
+  - Action: Making Bed     (6:16 AM --> 6:18 AM)
  
  Now that these behaviours have been abstracted into something called **Behaviour 1**, I can just rename **Behaviour 1** into something like **Morning Routine**. 
 
