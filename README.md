@@ -23,7 +23,7 @@ Research in psychology states that we are so unaware of our own patterns and int
   - Instantiation
   
 
-### Description of Code
+### Description
 
 This program essentially abstracts the physical actions that I do (e.g. Prepare food, watch YouTube video, Text Mom, etc.) into one whole behaviour. As input, it takes in a table of tracked time data, groups commonly clustered actions as "behaviours" and then returns a list of common behaviours that you have and their frequency
 
