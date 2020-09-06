@@ -38,4 +38,7 @@ So for example, this is an example of a very common behaviour that I have every 
  
  Now that these behaviours have been abstracted into something called **Behaviour 1**, I can just rename **Behaviour 1** into something like **Morning Routine**. 
 
+### Different Classes
 
+- TogglApi
+ - This class does basic manipulation of user time data so that the algorithm is optimized
