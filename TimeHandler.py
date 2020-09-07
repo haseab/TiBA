@@ -10,14 +10,19 @@ from toggl.TogglPy import Toggl
 
 class TogglApi():
 
-    def __init__(self, time_data, user_email, API_KEY):
+    def __init__(self, file, user_email, API_KEY):
         self.today = str(datetime.now())[:10]
-        self.file = file
-        self.data = pd.read_csv(time_data)
+        self.data = pd.read_csv(file)
         self.api = API_KEY
         self.user = user_email
 
-    def fetch_data(workspace_id, start_date=today, end_date=today):
+    def fetch_data(self, workspace_id, start_date=None, end_date=None):
+        if start_date == None:
+            start_date = self.today
+
+        if end_date == None
+            end_date = self.today
+
         page = 1
         keys = {
             'user_agent': self.user,
@@ -87,3 +92,7 @@ class TogglApi():
         unixE = pd.DatetimeIndex(enddates).astype(np.int64) // 10 ** 9
         return unixE - unixS
 
+# Example code that would be run in order to fetch data
+if __name__ == __main__:
+    #file = 'TogglOfficialData-2018-2020.csv'
+    #toggl = TogglApi(file, EMAIL, API_KEY)
