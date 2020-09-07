@@ -9,14 +9,30 @@ from toggl.TogglPy import Toggl
 
 
 class TogglApi():
-
-    def __init__(self, file, user_email, API_KEY):
+    """
+    This class is mainly used to fetch data from the Toggl REST API. Data comes in the form of a JSON
+    and then converted to a pandas dataframe object for further analysis.
+    Data from a CSV is also available and is
+    """
+    def __init__(self, user_email, API_KEY, file =None):
+        # Getting a reference for the date the instance is created
         self.today = str(datetime.now())[:10]
-        self.data = pd.read_csv(file)
         self.api = API_KEY
         self.user = user_email
 
+        # In case that there is a CSV filename passed as argument
+        if file !=None:
+            self.data = pd.read_csv(file)
+
     def fetch_data(self, workspace_id, start_date=None, end_date=None):
+        """
+        Interacts with Toggl REST API and gets the minute data from the date range given.
+        If start and end date are the same, the data for that day will be shown (non-inclusive)
+        :param workspace_id: Your Toggl workspace id (provided in website)
+        :param start_date: the starting date of the data
+        :param end_date: the ending date of the data
+        :return:
+        """
         if start_date == None:
             start_date = self.today
 
