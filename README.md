@@ -38,4 +38,8 @@ So for example, this is an example of a very common behaviour that I have every 
  
  Now that these behaviours have been abstracted into something called **Behaviour 1**, I can just rename **Behaviour 1** into something like **Morning Routine**. 
 
+### Different Classes
 
+- TimeHandler (This class does basic getting features of the data)
+  - Fetch Data -> Assuming that there are no CSV files, it will connect to your ***Toggl*** Account and grab the data from the range that you desire
+  
