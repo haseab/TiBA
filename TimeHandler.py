@@ -78,7 +78,7 @@ class TogglApi():
         df2 = pd.DataFrame(datas2, columns=columns)
         ## Choosing which columns to be used
         df2 = df2[['Id', 'Project', 'Description', 'Start', 'End', 'Tags']]
-        ## Separating start_date from start_time and end_date from end_time
+        ## Separating start_date column from start_time column and end_date from end_time
         df2['Start date'] = np.array([i[:10] for i in df2['Start'].values])
         df2['End date'] = np.array([i[:10] for i in df2['End'].values])
         df2['Start time'] = np.array([i[11:19] for i in df2['Start'].values])
