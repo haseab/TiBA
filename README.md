@@ -21,6 +21,8 @@ Research in psychology states that we are so unaware of our own patterns and int
 - Example
   - Initial Conditions
   - Instantiation
+  - Behaviour Tracking
+  - 
   
 
 ### Description
