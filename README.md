@@ -37,6 +37,9 @@ So for example, this is an example of a very common behaviour that I have every 
   - Action: Brushing Teeth (6:04 AM --> 6:08 AM)
   - Action: Flossing Teeth (6:08 AM --> 6:16 AM)
   - Action: Making Bed     (6:16 AM --> 6:18 AM)
+  
+  These are shown in a picture below
+  ![](https://github.com/haseab/TiBA/blob/master/TiBA_Getting%20Up.png)
  
  Now that these behaviours have been abstracted into something called **Behaviour 1**, I can just rename **Behaviour 1** into something like **Morning Routine**. 
 
