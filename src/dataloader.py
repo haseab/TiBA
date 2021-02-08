@@ -47,22 +47,15 @@ class DataLoader:
             'order_desc': 'off'
         }
         url = 'https://toggl.com/reports/api/v2/details'
-        url2 = 'https://toggl.com/api/v8/workspaces'
         headers = {'content-type': 'application/json'}
 
-        # Getting range of start->end dates in an array format
-        date_list = np.array([i.strftime('%Y-%m-%d') for i in pd.date_range(start_date, end_date).to_pydatetime()])
-        data = []
-
         # Interacting with API and getting data
-        for i in date_list:
-            keys.update(page=1)
-            keys.update(since=i)
-            keys.update(until=i)
-            r = requests.get(url, params=keys, headers=headers, auth=(self.api_key, 'api_token'))
-            for i in range(1, r.json()['total_count'] // 50 + 2):
-                keys.update(page=i)
-                data += requests.get(url, params=keys, headers=headers, auth=(self.api_key, 'api_token')).json()['data']
+        data = []
+        r = requests.get(url, params=keys, headers=headers, auth=(self.api_key, 'api_token'))
+        page_count = r.json()['total_count'] // 50 + 1
+        for page in range(1, page_count + 1):
+            keys.update(page=page)
+            data += requests.get(url, params=keys, headers=headers, auth=(self.api_key, 'api_token')).json()['data']
         datas2 = []
 
         # Getting the column names
