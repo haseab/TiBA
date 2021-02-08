@@ -4,23 +4,22 @@ import requests
 import matplotlib as plt
 from datetime import datetime, timedelta
 import numpy as np
+import os
 import time
 
-class TogglApi():
+class DataLoader:
     """
     This class is mainly used to fetch data from the Toggl REST API. Data comes in the form of a JSON
     and then converted to a pandas dataframe object for further analysis.
     Data from a CSV is also available and is
     """
-    def __init__(self, user_email, API_KEY, file =None):
+    def __init__(self):
         # Getting a reference for the date the instance is created
+        self.path = os.path.dirname(os.getcwd()) + r"\local\toggl_account.txt"
+        secret_info = pd.read_csv(self.path)
         self.today = str(datetime.now())[:10]
-        self.api_key = API_KEY
-        self.user = user_email
-
-        # In case that there is a CSV filename passed as argument
-        if file !=None:
-            self.data = pd.read_csv(file)
+        self.user = secret_info.loc[0,"email"]
+        self.api_key = secret_info.loc[0,"key"]
 
     def fetch_data(self, workspace_id, start_date=None, end_date=None):
         """
@@ -121,5 +120,6 @@ class TogglApi():
 
 # Example code that would be run in order to fetch data
 if __name__ == "__main__":
+    pass
     #file = 'TogglOfficialData-2018-2020.csv'
     #toggl = TogglApi(file, EMAIL, API_KEY)
