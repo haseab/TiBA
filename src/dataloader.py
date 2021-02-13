@@ -84,8 +84,8 @@ class DataLoader:
 
         return df2
 
-    def _clean(self, df):
-        df = self.origin[['Id', 'Project', 'Description', 'Start date', 'Start time', 'End date', 'End time', 'Tags',
+    def _clean(self, data):
+        df = data[['Id', 'Project', 'Description', 'Start date', 'Start time', 'End date', 'End time', 'Tags',
                           'SecDuration']].copy()
         df['Project'].fillna(value='No Project', inplace=True)
         df['Description'].fillna(value='', inplace=True)
@@ -96,8 +96,7 @@ class DataLoader:
     def _days_ago(self, number_of_days_ago=0):
         return (datetime.now() - timedelta(days=number_of_days_ago)).strftime('%Y-%m-%d')
 
-    def _get_project_list(self):
-        df = self._clean(self.origin)
+    def _get_project_list(self,df):
         return list(set(df['Project'].values))
 
     def _duration_in_seconds(self, df):
