@@ -20,8 +20,9 @@ class DataLoader:
         self.today = str(datetime.now())[:10]
         self.user = secret_info.loc[0,"email"]
         self.api_key = secret_info.loc[0,"key"]
+        self.account = secret_info.loc[0,"account"]
 
-    def fetch_data(self, workspace_id, start_date=None, end_date=None):
+    def fetch_data(self, start_date=None, end_date=None):
         """
         Interacts with Toggl REST API and gets the minute data from the date range given.
         If start and end date are the same, the data for that day will be shown (non-inclusive)
@@ -40,7 +41,7 @@ class DataLoader:
         # Parameters used to pass into API
         keys = {
             'user_agent': self.user,
-            'workspace_id': workspace_id,
+            'workspace_id': self.account,
             'since': start_date,
             'until': end_date,
             'page': page,
@@ -83,6 +84,14 @@ class DataLoader:
             ['Id', 'Project', 'Description', 'Start date', 'Start time', 'End date', 'End time', 'Tags', 'SecDuration']]
 
         return df2
+
+    def get_range_data(self, start_date='2020-1-1', end_date='2020-12-31'):
+        datetimes = pd.date_range(start_date, end_date).to_pydatetime()
+        if len(datetimes) - 1 < 8:
+            return self.fetch_data(start_date, end_date)
+        else:
+            date_list = [i.strftime('%Y-%m-%d') for i in datetimes]
+            return df[df['Start date'].isin(date_list)]
 
     def _clean(self, data):
         df = data[['Id', 'Project', 'Description', 'Start date', 'Start time', 'End date', 'End time', 'Tags',
