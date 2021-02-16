@@ -19,6 +19,11 @@ class Helper:
         return float(string[0])/float(string[1])
 
     @staticmethod
+    def get_actual_efficiency(loader, analyzer, start_date, end_date):
+        data = loader.fetch_data(start_date, end_date)
+        return analyzer.efficiency(loader, data)
+
+    @staticmethod
     def seconds_to_clock(series: pd.Series) -> np.array:
         duration = []
         for i in series:

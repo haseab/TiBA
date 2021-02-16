@@ -54,7 +54,7 @@ class Analyzer:
     def efficiency(self, loader, data):
         wasted = {'Trading': 2, 'TV Show': 0, 'Social Media': 0.5, 'Messaging': 1,
                   'Podcast': 1.5, 'Reflecting': 0.75, 'Private': 0.5, 'Music': 0.5, 'Sports': 0,
-                  'General learning': 2, 'People': 3.5, 'Exploring': 1, 'Chilling': 1.5, 'Movie': 0, 'Calling': 1,
+                  'General Learning': 2, 'People': 3.5, 'Exploring': 1, 'Chilling': 1.5, 'Movie': 0, 'Calling': 1,
                   'YouTube': 0.5, 'News': 1, 'Under Influence': 1, 'Gaming': 0, 'Surfing Casually': 0}
         neutral = ['Washroom', 'Transportation', 'Unavoidable Intermission', 'Driving', 'Financial', 'Getting Ready',
                    'Thinking',
@@ -103,12 +103,14 @@ class Analyzer:
         hours_free = (total - totaln) / 3600
         wasted_time = totalw / 3600
         efficiency = round(totalp / (total - totaln), 4)
+        inefficiency = round(totalw / (total - totaln), 4)
 
-        print(f"""
+        string = f"""
 Hours free: {round(hours_free, 3)} hours 
 Total productive hours = {round(totalp / 3600, 3)}
 Wasted time: {round(wasted_time, 3)} hours
+Inefficiency: {inefficiency*100}%
 Efficiency: {efficiency*100}%
-            """)
-
-        return efficiency
+            """
+        print(string)
+        return efficiency, inefficiency, string
