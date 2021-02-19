@@ -52,7 +52,7 @@ class Analyzer:
         return data.sort_values(by='SecDuration', ascending=False).drop("SecDuration", axis=1)
 
     def efficiency(self, loader, data):
-        wasted = {'Trading': 2, 'TV Show': 0, 'Social Media': 0.5, 'Messaging': 1,
+        wasted = {'Trading': 2, 'TV Show': 0, 'Social Media': 0.5, 'Messaging': 1, 'Casual Creative': 0.5,
                   'Podcast': 1.5, 'Reflecting': 0.75, 'Private': 0.5, 'Music': 0.5, 'Sports': 1,
                   'People': 3.5, 'Exploring': 2, 'Chilling': 1.5, 'Movie': 0, 'Calling': 1,
                   'YouTube': 0.5, 'News': 1, 'Under Influence': 1, 'Gaming': 0, 'Surfing Casually': 0}
@@ -76,44 +76,50 @@ class Analyzer:
         dfproductive = dftest[dftest.index.str.contains('Productive')].groupby("Project").sum()
         dfneutral = dftest[dftest.index.str.contains('Unavoidable')].groupby("Project").sum()
         # print(dfproductive)
-        # print(dfneutral)
+        # print()
 
         # Calculating Hours Free:
         data = data[['Project', 'SecDuration']].groupby(by='Project').sum()
-        total, totalw, totalp, totaln = 0, 0, 0, 0
-        productive_seconds, neutral_seconds = 0, 0
+        total, totalw, totalp, totaln, totalnw = 0, 0, 0, 0, 0
         for project, seconds in zip(data.index, data['SecDuration'].values):
+            productive_seconds, neutral_seconds = 0, 0
             total += seconds
             if project in neutral:
                 # print(project, seconds/3600)
                 totaln += seconds
             elif project in productive:
-                # print(j,round(j/3600,3))
+                # print(project,round(seconds/3600,3))
                 totalp += seconds
             elif project in wasted.keys():
                 totalw += seconds
-
+                # print(totalw)
+                # print(project, seconds/3600)
+                # print(dfneutral.index)
                 if project in dfproductive.index:
                     productive_seconds = dfproductive.loc[project, "SecDuration"]
                     totalw -= productive_seconds
                     totalp += productive_seconds
-                #             print(productive_seconds)
-                #             print(project, wasted[project]*3600)
-                elif project in dfneutral.index:
+                    # print(project, productive_seconds)
+                if project in dfneutral.index:
                     neutral_seconds = dfneutral.loc[project, "SecDuration"]
                     totalw -= neutral_seconds
                     totaln += neutral_seconds
                     # print(neutral_seconds)
-                    # print(project, wasted[project]*3600)
+                # print(f"Total: {totalw}")
                 totalw -= min(seconds - productive_seconds - neutral_seconds, wasted[project] * 3600)
-                productive_seconds = 0
-        #             print(totalw)
-        #             print()
+                totalnw += min(seconds - productive_seconds - neutral_seconds, wasted[project] * 3600)
+                # print(f"Total: {totalw}")
+                # print(project, totalw)
 
         hours_free = (total - totaln) / 3600
         wasted_time = totalw / 3600
         efficiency = round(totalp / (total - totaln), 4)
         inefficiency = round(totalw / (total - totaln), 4)
+        non_wasted_time = totalnw/3600
+        # print(non_wasted_time)
+
+        if totalnw != total-totaln-totalp-totalw:
+            raise Exception("Time fell through the cracks!")
 
         string = f"""
 Hours free: {round(hours_free, 3)} hours 
