@@ -53,49 +53,59 @@ class Analyzer:
 
     def efficiency(self, loader, data):
         wasted = {'Trading': 2, 'TV Show': 0, 'Social Media': 0.5, 'Messaging': 1,
-                  'Podcast': 1.5, 'Reflecting': 0.75, 'Private': 0.5, 'Music': 0.5, 'Sports': 0,
-                  'General Learning': 2, 'People': 3.5, 'Exploring': 1, 'Chilling': 1.5, 'Movie': 0, 'Calling': 1,
+                  'Podcast': 1.5, 'Reflecting': 0.75, 'Private': 0.5, 'Music': 0.5, 'Sports': 1,
+                  'People': 3.5, 'Exploring': 2, 'Chilling': 1.5, 'Movie': 0, 'Calling': 1,
                   'YouTube': 0.5, 'News': 1, 'Under Influence': 1, 'Gaming': 0, 'Surfing Casually': 0}
         neutral = ['Washroom', 'Transportation', 'Unavoidable Intermission', 'Driving', 'Financial', 'Getting Ready',
-                   'Thinking',
+                   'Thinking', 'Deciding', 'Emailing', 'Intermission', 'Location', 'Transportation',
                    'Hygiene', 'Report', 'Helping Parents', 'Errands', 'Spiritual', 'Technicalities', 'Maintaining',
-                   'Deciding', 'Emailing',
-                   'Medical', 'Eating', 'Tracking', 'Formal Working', 'School', 'Food Prep/Clean/Order',
-                   'Showering' 'Organizing',
+                   'Medical', 'Eating', 'Tracking', 'School', 'Food Prep/Clean/Order', 'Showering', 'Organizing',
                    'Unavoidable Family Matters', 'Sleep', 'Shopping', 'Biking', 'Under Influence']
-        productive = ['Contemplating', 'Designing', 'General Learning', 'Yoga', 'Meditating', 'Working Out',
-                      'Planning', 'Project', 'Skill Learning', 'Studying/Homework', 'Problem Solving', 'Wycik',
+        productive = ['Analyzing', 'Project', 'Designing', 'General Learning', 'Yoga', 'Meditating', 'Working Out',
+                      'Planning', 'Contemplating', 'Skill Learning', 'Studying/Homework', 'Problem Solving', 'Wycik',
                       'Event', 'Business', 'Book', 'Crypto', 'Helping/Giving', 'Meeting', 'Researching', 'Selling',
-                      'Practical', 'Concentrating', 'Skill Practicing', 'Formal Learning', 'Tutoring']
+                      'Practical', 'Concentrating', 'Skill Practicing', 'Formal Learning', 'Recalling', 'Tutoring',
+                      'Formal Working']
+
         pure_wasted = {i: 0 for i in wasted.keys() if wasted[i] == 0}
         project_list = loader._get_project_list(data)
         non_wasted = set(project_list) - set(pure_wasted) - set(neutral) - set(productive)
 
         dftest = data[['Project', 'SecDuration', 'Tags']].set_index('Tags')
         # Adds the sum of all tags that are labeled "Productive", separated by project.
-        dftag = dftest[dftest.index.str.contains('Productive')].groupby("Project").sum()
-        # print(dftag)
+        dfproductive = dftest[dftest.index.str.contains('Productive')].groupby("Project").sum()
+        dfneutral = dftest[dftest.index.str.contains('Unavoidable')].groupby("Project").sum()
+        # print(dfproductive)
+        # print(dfneutral)
 
         # Calculating Hours Free:
         data = data[['Project', 'SecDuration']].groupby(by='Project').sum()
-        total, totalw, totalp, productive_seconds, totaln = 0, 0, 0, 0, 0
+        total, totalw, totalp, totaln = 0, 0, 0, 0
+        productive_seconds, neutral_seconds = 0, 0
         for project, seconds in zip(data.index, data['SecDuration'].values):
             total += seconds
             if project in neutral:
+                # print(project, seconds/3600)
                 totaln += seconds
             elif project in productive:
-                # print(i,round(j/3600,3))
+                # print(j,round(j/3600,3))
                 totalp += seconds
             elif project in wasted.keys():
                 totalw += seconds
-                #             print(j)
-                if project in dftag.index:
-                    productive_seconds = dftag.loc[project, "SecDuration"]
+
+                if project in dfproductive.index:
+                    productive_seconds = dfproductive.loc[project, "SecDuration"]
                     totalw -= productive_seconds
                     totalp += productive_seconds
                 #             print(productive_seconds)
-                #             print(i, wasted[i]*3600)
-                totalw -= min(seconds - productive_seconds, wasted[project] * 3600)
+                #             print(project, wasted[project]*3600)
+                elif project in dfneutral.index:
+                    neutral_seconds = dfneutral.loc[project, "SecDuration"]
+                    totalw -= neutral_seconds
+                    totaln += neutral_seconds
+                    # print(neutral_seconds)
+                    # print(project, wasted[project]*3600)
+                totalw -= min(seconds - productive_seconds - neutral_seconds, wasted[project] * 3600)
                 productive_seconds = 0
         #             print(totalw)
         #             print()
@@ -112,5 +122,5 @@ Wasted time: {round(wasted_time, 3)} hours
 Inefficiency: {inefficiency*100}%
 Efficiency: {efficiency*100}%
             """
-        print(string)
+        # print(string)
         return efficiency, inefficiency, string
