@@ -30,20 +30,20 @@ class Analyzer:
     def slow_mindful_scores(self, data):
         actual_mindful_hours = Helper.sum_tags_hours(data, 'Mindful')
         actual_slow_hours = Helper.sum_tags_hours(data, 'Slow')
-        actual_mindful_percentage = round(actual_mindful_hours * 100 / self.max_mindful_slow(data)[0], 5)
-        actual_slow_percentage = round(actual_slow_hours * 100 / self.max_mindful_slow(data)[1], 5)
+        actual_mindful_percentage = round(actual_mindful_hours / self.max_mindful_slow(data)[0], 5)
+        actual_slow_percentage = round(actual_slow_hours / self.max_mindful_slow(data)[1], 5)
 
         start_date, end_date = data['Start date'][0], data['End date'][len(data)-2]
 
-        print(f'From {start_date} to {end_date}')
-        print(f'Mindful Percentage: {actual_mindful_percentage}%')
-        print(f'Slow Percentage:    {actual_slow_percentage}%')
-        print(f"""max hours to be mindful: {self.max_mindful_slow(data)[0]}
-                  max hours to be slow   : {self.max_mindful_slow(data)[1]}
-                  actual mindful (hours) : {round(actual_mindful_hours, 3)}
-                  actual slow (hours)    : {round(actual_slow_hours, 3)}
-        """)
-        return actual_mindful_percentage, actual_slow_percentage
+        string = f"""From {start_date} to {end_date}
+Mindful Percentage: {actual_mindful_percentage * 100 }%
+Slow Percentage:    {actual_slow_percentage * 100 }%
+max hours to be mindful: {self.max_mindful_slow(data)[0]}
+max hours to be slow   : {self.max_mindful_slow(data)[1]}
+actual mindful (hours) : {round(actual_mindful_hours, 3)}
+actual slow (hours)    : {round(actual_slow_hours, 3)}
+        """
+        return actual_mindful_percentage, actual_slow_percentage, string
 
     @staticmethod
     def get_week_summary(data):
@@ -111,7 +111,7 @@ class Analyzer:
                 # print(f"Total: {totalw}")
                 # print(project, totalw)
 
-        hours_free = (total - totaln) / 3600
+        hours_free = round((total - totaln) / 3600, 2)
         wasted_time = totalw / 3600
         efficiency = round(totalp / (total - totaln), 4)
         inefficiency = round(totalw / (total - totaln), 4)
@@ -129,4 +129,4 @@ Inefficiency: {inefficiency*100}%
 Efficiency: {efficiency*100}%
             """
         # print(string)
-        return efficiency, inefficiency, string
+        return hours_free, efficiency, inefficiency, string
