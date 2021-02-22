@@ -1,4 +1,4 @@
-from helper import Helper
+from tiba_helper import TiBAHelper
 from toggl_loader import DataLoader
 
 class Analyzer:
@@ -28,8 +28,8 @@ class Analyzer:
         return round(max_mindful / 3600, 2), round(max_slow / 3600, 2)
 
     def slow_mindful_scores(self, data):
-        actual_mindful_hours = Helper.sum_tags_hours(data, 'Mindful')
-        actual_slow_hours = Helper.sum_tags_hours(data, 'Slow')
+        actual_mindful_hours = TiBAHelper.sum_tags_hours(data, 'Mindful')
+        actual_slow_hours = TiBAHelper.sum_tags_hours(data, 'Slow')
         actual_mindful_percentage = round(actual_mindful_hours / self.max_mindful_slow(data)[0], 5)
         actual_slow_percentage = round(actual_slow_hours / self.max_mindful_slow(data)[1], 5)
 
@@ -48,7 +48,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
     @staticmethod
     def get_week_summary(data):
         data = data[['Project', 'SecDuration']].groupby(by='Project').sum()
-        data['Duration'] = Helper.seconds_to_clock(data['SecDuration'])
+        data['Duration'] = TiBAHelper.seconds_to_clock(data['SecDuration'])
         return data.sort_values(by='SecDuration', ascending=False).drop("SecDuration", axis=1)
 
     def efficiency(self, loader, data):
