@@ -21,7 +21,7 @@ class TiBAHelper:
     @staticmethod
     def get_actual_efficiency(loader, analyzer, start_date, end_date):
         data = loader.fetch_data(start_date, end_date)
-        return analyzer.efficiency(loader, data)
+        return analyzer.efficiency(loader, data)[:2]
 
     @staticmethod
     def seconds_to_clock(series: pd.Series) -> np.array:
