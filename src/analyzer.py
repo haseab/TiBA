@@ -7,7 +7,7 @@ class Analyzer:
 
     def max_mindful_slow(self, data):
         mindful_whitelist = ['Sleep', 'Concentration', 'Under Influence']
-        slow_whitelist = ['Analyzing', 'Concentration', 'Crypto', 'Deciding', 'Formal Learning', 'Gaming',
+        slow_whitelist = ['Concentration', 'Crypto', 'Deciding', 'Formal Learning', 'Gaming',
                           'General Learning', 'Meditating', 'Movie', 'Music', 'News', 'Podcast', 'Recalling',
                           'Reflecting', 'Researching', 'Skill Learning', 'Social Media', 'Sleep', 'Sports',
                           'Thinking', 'Transportation', 'TV Show', 'Under Influence', 'YouTube']
@@ -16,6 +16,10 @@ class Analyzer:
 
         max_mindful = 0
         max_slow = 0
+
+        dftag = data[['Project', 'SecDuration', 'Tags']].set_index('Tags')
+        dfslow = dftag[dftag.index.str.contains('Exclude Slow')].groupby("Project").sum()
+
         # Calculating total possible mindful seconds
         for project, seconds in zip(week_summary.index, week_summary['SecDuration'].values):
             if project not in mindful_whitelist:
@@ -25,11 +29,15 @@ class Analyzer:
         for project, seconds in zip(week_summary.index, week_summary['SecDuration'].values):
             if project not in slow_whitelist:
                 max_slow += seconds
+            if project in dfslow.index:
+                excluded_seconds = dfslow.loc[project, "SecDuration"]
+                max_slow -= excluded_seconds
+
         return round(max_mindful / 3600, 2), round(max_slow / 3600, 2)
 
     def slow_mindful_scores(self, data):
-        actual_mindful_hours = TiBAHelper.sum_tags_hours(data, 'Mindful')
-        actual_slow_hours = TiBAHelper.sum_tags_hours(data, 'Slow')
+        actual_mindful_hours = TiBAHelper.sum_tags_hours(data, 'Mindfulness')
+        actual_slow_hours = TiBAHelper.sum_tags_hours(data, 'Slowness')
         actual_mindful_percentage = round(actual_mindful_hours / self.max_mindful_slow(data)[0], 5)
         actual_slow_percentage = round(actual_slow_hours / self.max_mindful_slow(data)[1], 5)
 
@@ -129,4 +137,4 @@ Inefficiency: {inefficiency*100}%
 Efficiency: {efficiency*100}%
             """
         # print(string)
-        return hours_free, efficiency, inefficiency, string
+        return efficiency, inefficiency, string
