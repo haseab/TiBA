@@ -8,9 +8,9 @@ class Analyzer:
     def max_mindful_slow(self, data):
         mindful_whitelist = ['Sleep', 'Concentration', 'Under Influence']
         slow_whitelist = ['Concentration', 'Crypto', 'Deciding', 'Formal Learning', 'Gaming',
-                          'General Learning', 'Meditating', 'Movie', 'Music', 'News', 'Podcast', 'Recalling',
+                          'General Learning', "Contemplating", 'Meditating', 'Movie', 'Music', 'News', 'Podcast',
                           'Reflecting', 'Researching', 'Skill Learning', 'Social Media', 'Sleep', 'Sports',
-                          'Thinking', 'Transportation', 'TV Show', 'Under Influence', 'YouTube']
+                          'Thinking', 'Transportation', 'TV Show', 'Under Influence', 'Recalling', 'YouTube']
 
         week_summary = data[['Project', 'SecDuration']].groupby(by='Project').sum()
 
