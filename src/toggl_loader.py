@@ -60,7 +60,7 @@ class DataLoader:
         datas2 = []
 
         # Getting the column names
-        columns = [i[0].upper() + i[1:] for i in data[-1].keys()]
+        columns = [column[0].upper() + column[1:] for column in data[-1].keys()]
 
         # Converting JSON into a list of lists format
         for i in data:

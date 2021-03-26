@@ -75,7 +75,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                       'Practical', 'Concentrating', 'Skill Practicing', 'Formal Learning', 'Recalling', 'Tutoring',
                       'Formal Working']
 
-        pure_wasted = {i: 0 for i in wasted.keys() if wasted[i] == 0}
+        pure_wasted = {project: 0 for project in wasted.keys() if wasted[project] == 0}
         project_list = loader._get_project_list(data)
         non_wasted = set(project_list) - set(pure_wasted) - set(neutral) - set(productive)
 

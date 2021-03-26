@@ -5,7 +5,8 @@ class TiBAHelper:
 
     @staticmethod
     def sum_tags_hours(df2, keyword):
-        df2 = df2[[True if keyword in i else False for i in df2['Tags'].values]]
+        bool_list = [True if keyword in tag_list else False for tag_list in df2['Tags'].values]
+        df2 = df2[bool_list]
         keyword_time = 0
         for i, j in zip(df2['Tags'].values, df2['SecDuration'].values):
             for x in i.split(','):
@@ -26,8 +27,8 @@ class TiBAHelper:
     @staticmethod
     def seconds_to_clock(series: pd.Series) -> np.array:
         duration = []
-        for i in series:
-            hours, minutes, seconds = str(int(i // 3600)), str(int(i % 3600 // 60)), str(int((i % 3600) % 60))
+        for seconds in series:
+            hours, minutes, seconds = str(int(seconds // 3600)), str(int(seconds % 3600 // 60)), str(int((seconds % 3600) % 60))
             if len(minutes) < 2:
                 minutes = '0' + minutes
             if len(seconds) < 2:
