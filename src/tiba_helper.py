@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from datetime import datetime, timedelta
 
 class TiBAHelper:
 
@@ -25,15 +26,11 @@ class TiBAHelper:
         return analyzer.efficiency(loader, data)[:2]
 
     @staticmethod
-    def seconds_to_clock(series: pd.Series) -> np.array:
-        duration = []
-        for seconds in series:
-            hours, minutes, seconds = str(int(seconds // 3600)), str(int(seconds % 3600 // 60)), str(int((seconds % 3600) % 60))
-            if len(minutes) < 2:
-                minutes = '0' + minutes
-            if len(seconds) < 2:
-                seconds = '0' + seconds
-            if len(series) == 1:
-                return f'{hours}:{minutes}:{seconds}'
-            duration.append(f'{hours}:{minutes}:{seconds}')
-        return np.array(duration)
+    def clock_to_seconds(str_time):
+        dt = datetime.strptime(str_time, "%H:%M:%S")
+        delta = timedelta(hours=dt.hour, minutes=dt.minute, seconds=dt.second)
+        return delta.seconds
+
+    @staticmethod
+    def seconds_to_clock(second_series: pd.Series) -> np.array:
+        return np.array([str(timedelta(seconds=second)) for second in second_series])
