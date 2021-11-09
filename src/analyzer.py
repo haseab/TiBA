@@ -65,7 +65,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                   'People': 3.5, 'Exploring': 2, 'Chilling': 1.5, 'Movie': 0, 'Calling': 1,
                   'YouTube': 0.5, 'News': 1, 'Under Influence': 1, 'Gaming': 0, 'Surfing Casually': 0}
         neutral = ['Washroom', 'Transportation', 'Unavoidable Intermission', 'Driving', 'Financial', 'Getting Ready',
-                   'Thinking', 'Deciding', 'Emailing', 'Intermission', 'Location', 'Transportation',
+                   'Thinking', 'Deciding', 'Intermission', 'Location',
                    'Hygiene', 'Report', 'Helping Parents', 'Errands', 'Spiritual', 'Technicalities', 'Maintaining',
                    'Medical', 'Eating', 'Tracking', 'School', 'Food Prep/Clean/Order', 'Showering', 'Organizing',
                    'Unavoidable Family Matters', 'Sleep', 'Shopping', 'Biking', 'Under Influence']
@@ -73,7 +73,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                       'Planning', 'Contemplating', 'Skill Learning', 'Studying/Homework', 'Problem Solving', 'Wycik',
                       'Event', 'Business', 'Book', 'Crypto', 'Helping/Giving', 'Meeting', 'Researching', 'Selling',
                       'Practical', 'Concentrating', 'Skill Practicing', 'Formal Learning', 'Recalling', 'Tutoring',
-                      'Formal Working']
+                      'Formal Working', 'Emailing']
 
         pure_wasted = {project: 0 for project in wasted.keys() if wasted[project] == 0}
         project_list = loader._get_project_list(data)
@@ -93,8 +93,9 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
             productive_seconds, neutral_seconds = 0, 0
             total += seconds
             if project in neutral:
-                # print(project, seconds/3600)
+                print(project, seconds/3600)
                 totaln += seconds
+                # print(totaln/3600)
             elif project in productive:
                 # print(project,round(seconds/3600,3))
                 totalp += seconds
@@ -112,7 +113,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                     neutral_seconds = dfneutral.loc[project, "SecDuration"]
                     totalw -= neutral_seconds
                     totaln += neutral_seconds
-                    # print(neutral_seconds)
+                    print(neutral_seconds)
                 # print(f"Total: {totalw}")
                 totalw -= min(seconds - productive_seconds - neutral_seconds, wasted[project] * 3600)
                 totalnw += min(seconds - productive_seconds - neutral_seconds, wasted[project] * 3600)
