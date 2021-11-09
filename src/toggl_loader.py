@@ -6,6 +6,12 @@ from datetime import datetime, timedelta
 import numpy as np
 import os
 import time
+from notion.client import NotionClient
+from notion.block.collection.basic import CollectionViewBlock
+from notion.block.basic import ToggleBlock
+from notion.block.basic import TextBlock
+from notion.block.basic import BulletedListBlock
+
 
 class DataLoader:
     """
@@ -21,8 +27,9 @@ class DataLoader:
         self.user = secret_info.loc[0,"email"]
         self.api_key = secret_info.loc[0,"key"]
         self.account = secret_info.loc[0,"account"]
+        self.notion_token = secret_info.loc[0, 'notion']
 
-    def fetch_data(self, start_date=None, end_date=None):
+    def fetch_data(self, start_date=None, end_date=None, tasks_ago=None):
         """
         Interacts with Toggl REST API and gets the minute data from the date range given.
         If start and end date are the same, the data for that day will be shown (non-inclusive)
@@ -47,16 +54,18 @@ class DataLoader:
             'page': page,
             'order_desc': 'off'
         }
-        url = 'https://toggl.com/reports/api/v2/details'
+        url = 'https://api.track.toggl.com/reports/api/v2/details'
         headers = {'content-type': 'application/json'}
 
         # Interacting with API and getting data
         data = []
         r = requests.get(url, params=keys, headers=headers, auth=(self.api_key, 'api_token'))
         page_count = r.json()['total_count'] // 50 + 1
+        count = 0
         for page in range(1, page_count + 1):
             keys.update(page=page)
-            data += requests.get(url, params=keys, headers=headers, auth=(self.api_key, 'api_token')).json()['data']
+            data_point = requests.get(url, params=keys, headers=headers, auth=(self.api_key, 'api_token'))
+            data += data_point.json()['data']
         datas2 = []
 
         # Getting the column names
@@ -92,6 +101,46 @@ class DataLoader:
         else:
             date_list = [i.strftime('%Y-%m-%d') for i in datetimes]
             return df[df['Start date'].isin(date_list)]
+
+
+    def get_report_summary(self, start_date, end_date):
+        skip_projects = ["Biking", "Concentrating", "Crypto", "Driving", "Eating", "Food Prep/Clean/Order",
+                         "Getting Ready", "Intermission", "Location", "Maintaining", "Private", "Showering", "Sleep",
+                         "Spiritual", "Technicalities", "Thinking", "Tracking", "Transportation", "Tutoring",
+                         "Washroom", "Report", "Hygiene", "Unavoidable Intermission", ]
+
+        url = "https://api.track.toggl.com/reports/api/v2/summary"
+        headers = {'content-type': 'application/json'}
+
+        report_template_link = "https://www.notion.so/631df0a82a844ecaba51df476988bbfc"
+        client = NotionClient(token_v2=self.notion_token)
+        block = client.get_block(report_template_link)
+
+        # Parameters used to pass into API
+        keys = {
+            'user_agent': self.user,
+            'workspace_id': self.account,
+            'since': start_date,
+            'until': end_date,
+            'order_field': 'duration',
+            'order_desc': 'on'
+        }
+
+        r = requests.get(url, params=keys, headers=headers, auth=(self.api_key, 'api_token'))
+        json = r.json()
+
+        for dic in json['data']:
+            if dic['title']['project'] in skip_projects or dic['items'] == []:
+                continue
+
+            parent = block.children.add_new(ToggleBlock, title=dic['title']['project'])
+
+            for proj_desc in dic['items']:
+                string = proj_desc['title']['time_entry'] + " -- "
+                string += str(round(proj_desc['time']/3_600_000, 2)) + "h" + " -- "
+                child = parent.children.add_new(BulletedListBlock, title=string)
+
+        return json
 
     def _clean(self, data):
         df = data[['Id', 'Project', 'Description', 'Start date', 'Start time', 'End date', 'End time', 'Tags',
