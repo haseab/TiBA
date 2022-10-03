@@ -1,16 +1,15 @@
-import pandas as pd
 import math
-import requests
-import matplotlib as plt
-from datetime import datetime, timedelta
-import numpy as np
 import os
 import time
-from notion.client import NotionClient
+from datetime import datetime, timedelta
+
+import matplotlib as plt
+import numpy as np
+import pandas as pd
+import requests
+from notion.block.basic import BulletedListBlock, TextBlock, ToggleBlock
 from notion.block.collection.basic import CollectionViewBlock
-from notion.block.basic import ToggleBlock
-from notion.block.basic import TextBlock
-from notion.block.basic import BulletedListBlock
+from notion.client import NotionClient
 
 
 class DataLoader:
@@ -60,6 +59,7 @@ class DataLoader:
         # Interacting with API and getting data
         data = []
         r = requests.get(url, params=keys, headers=headers, auth=(self.api_key, 'api_token'))
+
         page_count = r.json()['total_count'] // 50 + 1
         count = 0
         for page in range(1, page_count + 1):
@@ -113,7 +113,12 @@ class DataLoader:
         headers = {'content-type': 'application/json'}
 
         report_template_link = "https://www.notion.so/631df0a82a844ecaba51df476988bbfc"
-        client = NotionClient(token_v2=self.notion_token)
+        try:
+            client = NotionClient(token_v2=self.notion_token)
+        except Exception as e:
+            print(self.notion_token)
+            raise(e)
+
         block = client.get_block(report_template_link)
 
         # Parameters used to pass into API
