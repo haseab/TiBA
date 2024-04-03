@@ -1,8 +1,10 @@
-import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta
 
-class TiBAHelper:
+import numpy as np
+import pandas as pd
+
+
+class Helper:
 
     @staticmethod
     def sum_tags_hours(df2, keyword):
@@ -12,7 +14,7 @@ class TiBAHelper:
         for i, j in zip(df2['Tags'].values, df2['SecDuration'].values):
             for x in i.split(','):
                 if keyword in x:
-                    keyword_time += TiBAHelper.fraction_to_float(x.strip(" ''").split(' ')[0])*j
+                    keyword_time += Helper.fraction_to_float(x.strip(" ''").split(' ')[0])*j
         return keyword_time/3600
 
     @staticmethod
