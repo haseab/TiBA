@@ -9,15 +9,15 @@ class Cleaner:
     def __init__(self):
         self.wasted = {'Trading': 2, 'TV Show': 0, 'Social Media': 0.5, 'Messaging': 1, 'Casual Creative': 0.5,
                   'Podcast': 1.5, 'Private': 2.5, 'Music': 0.5, 'Sports': 1, 'Playing':0,
-                  'People': 3.5, 'Exploring': 2, 'Chilling': 1.5, 'Movie': 0, 'Calling': 1, 'Dating': 0,
-                  'YouTube': 0.5, 'News': 1, 'Under Influence': 1, 'Gaming': 0, 'Surfing Casually': 0, 'Relationship': 3} 
+                  'People': 3.5, 'Exploring': 2, 'Chilling': 1.5, 'Movie': 0, 'Calling': 1, 'Dating': 3,
+                  'YouTube': 0.5, 'News': 1, 'Under Influence': 1, 'Gaming': 0, 'Surfing Casually': 0, 'Relationship': 3}
         self.neutral = ['Washroom', 'Transportation', 'Unavoidable Intermission', 'Driving', 'Financial', 'Getting Ready',
                    'Thinking', 'Deciding', 'Intermission', 'Location', 'Listening',
                    'Hygiene','Helping Parents', 'Errands', 'Spiritual', 'Technicalities', 'Maintaining',
-                   'Medical', 'Eating', 'Tracking', 'School', 'Food Prep/Clean/Order', 'Showering', 'Organizing',
+                   'Medical', 'Eating', 'Tracking', 'School', 'Food Prep/Clean/Order', 'Showering',
                    'Unavoidable Family Matters', 'Sleep', 'Shopping', 'Biking', 'Under Influence']
         self.productive = ['Analyzing','Reflecting', 'Project', 'Designing', 'General Learning', 'Yoga', 'Meditating', 'Working Out',
-                      'Planning', 'Contemplating', 'Skill Learning', 'Studying/Homework', 'Problem Solving', 'Wycik',
+                      'Planning', 'Contemplating', 'Skill Learning', 'Studying/Homework', 'Problem Solving', 'Wycik', 'Organizing',
                       'Event', 'Business', 'Book', 'Report', 'Crypto', 'Helping/Giving', 'Meeting', 'Researching', 'Selling',
                       'Practical', 'Concentrating', 'Skill Practicing', 'Formal Learning', 'Recalling', 'Mentoring',
                       'Formal Working', 'Emailing']

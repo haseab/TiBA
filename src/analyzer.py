@@ -15,15 +15,15 @@ class Analyzer:
         self.unplanned = GoogleCalendar(os.getenv("UNPLANNED_CALENDAR_ID"))
         self.wasted = {'Trading': 2, 'TV Show': 0, 'Social Media': 0.5, 'Messaging': 1, 'Casual Creative': 0.5,
                   'Podcast': 1.5, 'Private': 2.5, 'Music': 0.5, 'Sports': 1, 'Playing':0,
-                  'People': 3.5, 'Exploring': 2, 'Chilling': 1.5, 'Movie': 0, 'Calling': 1, 'Dating': 0,
-                  'YouTube': 0.5, 'News': 1, 'Under Influence': 1, 'Gaming': 0, 'Surfing Casually': 0, 'Relationship': 3} 
+                  'People': 3.5, 'Exploring': 2, 'Chilling': 1.5, 'Movie': 0, 'Calling': 1, 'Dating': 3,
+                  'YouTube': 0.5, 'News': 1, 'Under Influence': 1, 'Gaming': 0, 'Surfing Casually': 0, 'Relationship': 3}
         self.neutral = ['Washroom', 'Transportation', 'Unavoidable Intermission', 'Driving', 'Financial', 'Getting Ready',
                    'Thinking', 'Deciding', 'Intermission', 'Location', 'Listening',
                    'Hygiene','Helping Parents', 'Errands', 'Spiritual', 'Technicalities', 'Maintaining',
-                   'Medical', 'Eating', 'Tracking', 'School', 'Food Prep/Clean/Order', 'Showering', 'Organizing',
+                   'Medical', 'Eating', 'Tracking', 'School', 'Food Prep/Clean/Order', 'Showering',
                    'Unavoidable Family Matters', 'Sleep', 'Shopping', 'Biking', 'Under Influence']
         self.productive = ['Analyzing','Reflecting', 'Project', 'Designing', 'General Learning', 'Yoga', 'Meditating', 'Working Out',
-                      'Planning', 'Contemplating', 'Skill Learning', 'Studying/Homework', 'Problem Solving', 'Wycik',
+                      'Planning', 'Contemplating', 'Skill Learning', 'Studying/Homework', 'Problem Solving', 'Wycik', 'Organizing',
                       'Event', 'Business', 'Book', 'Report', 'Crypto', 'Helping/Giving', 'Meeting', 'Researching', 'Selling',
                       'Practical', 'Concentrating', 'Skill Practicing', 'Formal Learning', 'Recalling', 'Mentoring',
                       'Formal Working', 'Emailing']
@@ -126,6 +126,16 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
         data['Duration'] = helper.seconds_to_clock(data['SecDuration'])
         return data.sort_values(by='SecDuration', ascending=False).drop("SecDuration", axis=1)
     
+    def prev_week(self, start_date, end_date, times=1):
+        if (times == 0):
+            return start_date, end_date
+        if (times == 1):
+            datetimes = pd.date_range(start_date, end_date).to_pydatetime()
+            return str(datetimes[0]-timedelta(days=7))[:10], str(datetimes[-1] - timedelta(days=7))[:10]
+        start_date, end_date = self.prev_week(start_date, end_date)
+        return self.prev_week(start_date, end_date, times-1)
+
+
     def dprint(self, *args):
         if self.debug:
             print(*args)
