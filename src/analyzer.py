@@ -69,7 +69,7 @@ class Analyzer:
                 all_events += [events]
         return all_events
     
-    def calculate_ad_hoc_time(self, start_date, end_date, week=False):
+    def calculate_unplanned_time(self, start_date, end_date, week=False):
         # Turn start date and end date into datetime objects
         start_date = datetime.strptime(start_date, '%Y-%m-%d').replace(hour=0, minute=0, second=0)
         end_date = datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
