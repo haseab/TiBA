@@ -33,7 +33,7 @@ class DataWriter:
         url = "https://api.track.toggl.com/reports/api/v2/summary"
         headers = {'content-type': 'application/json'}
 
-        report_template_link = os.get("NOTION_REPORT_TEMPLATE_LINK")
+        report_template_link = os.getenv("NOTION_REPORT_TEMPLATE_LINK")
 
         try:
             client = NotionClient(token_v2=self.NOTION_TOKEN_V2)
