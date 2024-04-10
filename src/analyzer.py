@@ -2,7 +2,6 @@ import os
 from datetime import datetime, timedelta
 
 import pandas as pd
-## import env
 from dotenv import load_dotenv
 from gcsa.google_calendar import GoogleCalendar
 
@@ -57,6 +56,15 @@ class Analyzer:
 
         return round(max_mindful / 3600, 2), round(max_slow / 3600, 2)
     
+    def prev_week(self, start_date, end_date, times=1):
+        if (times == 0):
+            return start_date, end_date
+        if (times == 1):
+            datetimes = pd.date_range(start_date, end_date).to_pydatetime()
+            return str(datetimes[0]-timedelta(days=7))[:10], str(datetimes[-1] - timedelta(days=7))[:10]
+        start_date, end_date = self.prev_week(start_date, end_date)
+        return self.prev_week(start_date, end_date, times-1)
+    
     def get_all_current_events(self, cal_dic):
         date_before = datetime.now().astimezone()
         date_after = datetime.now().astimezone() + timedelta(minutes=0.5)
@@ -68,12 +76,12 @@ class Analyzer:
                 events += [name]
                 all_events += [events]
         return all_events
-    
+
+
     def calculate_unplanned_time(self, start_date, end_date, week=False):
         # Turn start date and end date into datetime objects
         start_date = datetime.strptime(start_date, '%Y-%m-%d').replace(hour=0, minute=0, second=0)
         end_date = datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
-
 
         # Get all events from unplanned calendar
         all_events = self.unplanned.get_events(start_date, end_date, single_events=True)
@@ -100,8 +108,8 @@ class Analyzer:
 
         # Otherwise, return the total duration for the period
         return round(total_duration/3600, 3)
-    
 
+    
     def slow_mindful_scores(self, data):
         actual_mindful_hours = helper.sum_tags_hours(data, 'Mindfulness')
         actual_slow_hours = helper.sum_tags_hours(data, 'Slowness')
@@ -126,38 +134,38 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
         data['Duration'] = helper.seconds_to_clock(data['SecDuration'])
         return data.sort_values(by='SecDuration', ascending=False).drop("SecDuration", axis=1)
     
-    def prev_week(self, start_date, end_date, times=1):
-        if (times == 0):
-            return start_date, end_date
-        if (times == 1):
-            datetimes = pd.date_range(start_date, end_date).to_pydatetime()
-            return str(datetimes[0]-timedelta(days=7))[:10], str(datetimes[-1] - timedelta(days=7))[:10]
-        start_date, end_date = self.prev_week(start_date, end_date)
-        return self.prev_week(start_date, end_date, times-1)
-
-
     def dprint(self, *args):
         if self.debug:
             print(*args)
 
     def group_df(self, time_df):
     # Create a DataFrame
-        df = pd.DataFrame(time_df, columns=['Id',"Start date", 'Project', 'Description', 'SecDuration', 'TagProductive', 'TagUnavoidable'])
+        df = pd.DataFrame(time_df, columns=['Id',"Start date", 'Start time', 'Project', 'Description', 'SecDuration', 'TagProductive', 'TagUnavoidable', 'Carryover', 'FlowExempt'])
 
         # Remove all Time entries that have ["Tracking", "Planning", "Eating", "Getting Ready", "Washroom"] , in the Project column and ALSO are under 100 seconds in SecDuration column
-        df = df[~((df['Project'].isin(["Tracking", "Planning", "Eating", "Getting Ready", "Washroom", "Messaging", "Calling", "Maintenance", "People", "Relationship", "Analyzing", "Emailing", "Listening", "Organizing", "Thinking", "Food Prep/Clean/Order", "Recalling", "Unavoidable Intermission", "Technicalities"])) & (df['SecDuration'] < 100))]
+        # df = df[~((df['Project'].isin(["Tracking", "Planning", "Eating", "Getting Ready", "Washroom", "Messaging", "Calling", "Maintenance", "People", "Relationship", "Analyzing", "Emailing", "Listening", "Organizing", "Thinking", "Food Prep/Clean/Order", "Recalling", "Unavoidable Intermission", "Technicalities"])) & (df['SecDuration'] < 100))]
 
-        # Add a column to track the group of consecutive projects
-        df['Group'] = (df['Project'] != df['Project'].shift()).cumsum()
+        df = df[~df['FlowExempt']]
+
+        # Mark Projects that are in self.productive as 'Productive'
+        df['TagProductive'] = df['Project'].isin(self.productive) | df['TagProductive']
+        df['ProjectTag'] = df['Project'] + ' ' + df['TagProductive'].astype(str)
+        df['Shifted ProjectTag'] = df['ProjectTag'].shift()
+        shifted_carryover = df['Carryover'].shift(-1).fillna(False)
+        df['Carryover'] = df['Carryover'] | shifted_carryover
+        df['Shifted Carryover'] = df['Carryover'].shift()
+        df['PreGroup'] = ~((df['ProjectTag'] == df['ProjectTag'].shift()) | (df['Carryover'] & df['Carryover'].shift()))
+        df["Group"] = (~((df['ProjectTag'] == df['ProjectTag'].shift()) | (df['Carryover'] & df['Carryover'].shift()))).cumsum()
 
         # Group by the 'Group' column, and aggregate the 'SecDuration' using sum()
         # Also, take the first value of 'Project' for each group
         grouped = df.groupby('Group').agg({
             "Start date": "first",
+            'Start time': 'first',
             'Project': 'first',
             'SecDuration': 'sum',
-            'TagProductive': 'any',
-            'TagUnavoidable': 'any'
+            'TagProductive': 'all',
+            'TagUnavoidable': 'all'
         })
 
         # Update the 'Description' based on whether the group contains more than one row
@@ -165,7 +173,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
 
         # Reset the index
         grouped.reset_index(drop=True, inplace=True)
-        grouped = grouped[["Start date", 'Project', 'Description', 'SecDuration', 'TagProductive', 'TagUnavoidable']]
+        grouped = grouped[["Start date", 'Start time', 'Project', 'Description', 'SecDuration', 'TagProductive', 'TagUnavoidable']]
         return grouped
     
     def calculate_1HUT(self, time_df, week=False):
@@ -176,6 +184,8 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
 
         time_df['TagProductive'] = time_df['Tags'].str.contains('Productive')
         time_df['TagUnavoidable'] = time_df['Tags'].str.contains('Unavoidable')
+        time_df['Carryover'] = time_df['Tags'].str.contains('Carryover')
+        time_df['FlowExempt'] = time_df['Tags'].str.contains('FlowExempt')
 
         productive = self.productive
         wasted = self.wasted
@@ -197,8 +207,12 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                 if project in productive:
                     if tag_unavoidable:
                         daily_totals[task_date]['neutral'] += task_seconds
-                    else:
+                    elif tag_productive:
                         daily_totals[task_date]['productive'] += task_seconds
+                    else:
+                        print("PLEASE TAG YOUR CARRYOVER TASKS PROPERLY")
+                        print(task_date, time_df.loc[index, 'Start time'], project, time_df.loc[index, "Description"][:10], task_seconds/3600)
+                        raise ValueError("PLEASE TAG YOUR CARRYOVER TASKS PROPERLY")
                 elif project in neutral:
                     if tag_productive:
                         daily_totals[task_date]['productive'] += task_seconds
@@ -212,7 +226,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                     else:
                         daily_totals[task_date]['non_wasted'] += task_seconds
                         if task_seconds/3600 > wasted[project]:
-                            # print(task_date, project, task_seconds/3600, wasted[project])
+                            print(task_date, project, task_seconds/3600, wasted[project])
                             daily_totals[task_date]['wasted'] += task_seconds - wasted[project]*3600
         if week:
             for date in sorted(daily_totals.keys()):
@@ -264,7 +278,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
 
         data['TagProductive'] = data['Tags'].str.contains('Productive')
         data['TagUnavoidable'] = data['Tags'].str.contains('Unavoidable')
-
+        data['SecDuration'] = data['SecDuration'].astype(int)
         grouped_data = data.groupby(['Start date', 'Project', 'TagProductive', 'TagUnavoidable']).sum().reset_index()
 
         # Initializing total and daily metrics
@@ -273,7 +287,6 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
         # Processing each day and project
         for date, group in grouped_data.groupby('Start date'):
             day_totals = {key: 0 for key in daily_metrics.keys()}
-
             for _, row in group.iterrows():
                 project, seconds = row['Project'], row['SecDuration']
                 tag_productive, tag_unavoidable = row['TagProductive'], row['TagUnavoidable']
