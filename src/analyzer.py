@@ -140,7 +140,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
 
     def group_df(self, time_df):
     # Create a DataFrame
-        df = pd.DataFrame(time_df, columns=['Id',"Start date", 'Start time', 'Project', 'Description', 'SecDuration', 'TagProductive', 'TagUnavoidable', 'Carryover', 'FlowExempt'])
+        df = pd.DataFrame(time_df, columns=['Id',"Start date", 'Start time', 'Project', 'Description', 'SecDuration', 'TagProductive', 'TagUnavoidable', 'TagUnproductive', 'Carryover', 'FlowExempt'])
 
         # Remove all Time entries that have ["Tracking", "Planning", "Eating", "Getting Ready", "Washroom"] , in the Project column and ALSO are under 100 seconds in SecDuration column
         # df = df[~((df['Project'].isin(["Tracking", "Planning", "Eating", "Getting Ready", "Washroom", "Messaging", "Calling", "Maintenance", "People", "Relationship", "Analyzing", "Emailing", "Listening", "Organizing", "Thinking", "Food Prep/Clean/Order", "Recalling", "Unavoidable Intermission", "Technicalities"])) & (df['SecDuration'] < 100))]
@@ -149,7 +149,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
 
         # Mark Projects that are in self.productive as 'Productive'
         df['TagProductive'] = df['Project'].isin(self.productive) | df['TagProductive']
-        df['ProjectTag'] = df['Project'] + ' ' + df['TagProductive'].astype(str)
+        df['ProjectTag'] = df['Project'] + ' ' + df['TagProductive'].astype(str) + ' ' + df['TagUnavoidable'].astype(str) + ' ' + df['TagUnproductive'].astype(str)
         df['Shifted ProjectTag'] = df['ProjectTag'].shift()
         shifted_carryover = df['Carryover'].shift(-1).fillna(False)
         df['Carryover'] = df['Carryover'] | shifted_carryover
@@ -165,7 +165,8 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
             'Project': 'first',
             'SecDuration': 'sum',
             'TagProductive': 'all',
-            'TagUnavoidable': 'all'
+            'TagUnavoidable': 'all',
+            'TagUnproductive': 'all',
         })
 
         # Update the 'Description' based on whether the group contains more than one row
@@ -173,7 +174,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
 
         # Reset the index
         grouped.reset_index(drop=True, inplace=True)
-        grouped = grouped[["Start date", 'Start time', 'Project', 'Description', 'SecDuration', 'TagProductive', 'TagUnavoidable']]
+        grouped = grouped[["Start date", 'Start time', 'Project', 'Description', 'SecDuration', 'TagProductive', 'TagUnavoidable', 'TagUnproductive']]
         return grouped
     
     def calculate_1HUT(self, time_df, week=False):
@@ -183,6 +184,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
         p1HUT_dict, n1HUT_dict, nw1HUT_dict, w1HUT_dict = {}, {}, {}, {}
 
         time_df['TagProductive'] = time_df['Tags'].str.contains('Productive')
+        time_df['TagUnproductive'] = time_df['Tags'].str.contains('Unproductive')
         time_df['TagUnavoidable'] = time_df['Tags'].str.contains('Unavoidable')
         time_df['Carryover'] = time_df['Tags'].str.contains('Carryover')
         time_df['FlowExempt'] = time_df['Tags'].str.contains('FlowExempt')
@@ -196,17 +198,22 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
             task_seconds = int(time_df.loc[index, "SecDuration"])
             project = time_df.loc[index, 'Project']
             task_date = time_df.at[index, 'Start date']  # Assuming 'Date' column exists
-            tag_productive, tag_unavoidable = time_df.at[index, 'TagProductive'], time_df.at[index, 'TagUnavoidable']
+            tag_productive, tag_unavoidable, tag_unproductive = time_df.at[index, 'TagProductive'], time_df.at[index, 'TagUnavoidable'], time_df.at[index, 'TagUnproductive']
             if task_date not in daily_totals:
               daily_totals[task_date] = {'productive': 0, 'neutral': 0, 'non_wasted': 0, 'wasted': 0}
             
             neg_dic = ["Sleep"]
             if task_seconds > 60 * flow_threshold and project not in neg_dic:
-                # print(task_date, project, time_df.loc[index, "Description"][:10], task_seconds/3600)
+                # print(task_date, project, time_df.loc[index, 'Start time'], time_df.loc[index, "Description"][:30], task_seconds/3600)
                 # print(tag_productive, tag_unavoidable)
                 if project in productive:
                     if tag_unavoidable:
                         daily_totals[task_date]['neutral'] += task_seconds
+                    elif tag_unproductive:
+                        daily_totals[task_date]['non_wasted'] += task_seconds
+                        if task_seconds/3600 > wasted[project]:
+                            print(task_date, project, task_seconds/3600, wasted[project])
+                            daily_totals[task_date]['wasted'] += task_seconds - wasted[project]*3600
                     elif tag_productive:
                         daily_totals[task_date]['productive'] += task_seconds
                     else:
@@ -216,6 +223,11 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                 elif project in neutral:
                     if tag_productive:
                         daily_totals[task_date]['productive'] += task_seconds
+                    elif tag_unproductive:
+                        daily_totals[task_date]['non_wasted'] += task_seconds
+                        if task_seconds/3600 > wasted[project]:
+                            print(task_date, project, task_seconds/3600, wasted[project])
+                            daily_totals[task_date]['wasted'] += task_seconds - wasted[project]*3600
                     else:
                         daily_totals[task_date]['neutral'] += task_seconds
                 elif project in wasted:
