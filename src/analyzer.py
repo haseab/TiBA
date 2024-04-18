@@ -147,8 +147,13 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
 
         df = df[~df['FlowExempt']]
 
+        df['TagProductive'] = df['TagProductive'].astype(bool)
+        df['TagUnproductive'] = df['TagUnproductive'].astype(bool)
+        df['TagUnavoidable'] = df['TagUnavoidable'].astype(bool)
+        
         # Mark Projects that are in self.productive as 'Productive'
-        df['TagProductive'] = df['Project'].isin(self.productive) | df['TagProductive']
+        df['TagProductive'] = (df['Project'].isin(self.productive) | df['TagProductive']) & ~df['TagUnproductive'] & ~df['TagUnavoidable']
+        df['TagProductiveCheck'] = df['TagProductive']
         df['ProjectTag'] = df['Project'] + ' ' + df['TagProductive'].astype(str) + ' ' + df['TagUnavoidable'].astype(str) + ' ' + df['TagUnproductive'].astype(str)
         df['Shifted ProjectTag'] = df['ProjectTag'].shift()
         shifted_carryover = df['Carryover'].shift(-1).fillna(False)
@@ -165,12 +170,18 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
             'Project': 'first',
             'SecDuration': 'sum',
             'TagProductive': 'all',
+            'TagProductiveCheck': 'any',
             'TagUnavoidable': 'all',
             'TagUnproductive': 'all',
         })
 
         # Update the 'Description' based on whether the group contains more than one row
         grouped['Description'] = grouped.apply(lambda row: 'General' if len(df[df['Group'] == row.name]) > 1 else df[df['Group'] == row.name].iloc[0]['Description'], axis=1)
+
+        if not grouped['TagProductive'].equals(grouped['TagProductiveCheck']):
+            dfPrint = grouped[~grouped['TagProductive'].eq(grouped['TagProductiveCheck'])]
+            print(dfPrint[['Start date', 'Start time', 'Project']])
+            raise ValueError("ERROR: TagProductive and TagProductiveCheck are not the same")
 
         # Reset the index
         grouped.reset_index(drop=True, inplace=True)
