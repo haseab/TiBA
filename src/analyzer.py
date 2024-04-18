@@ -223,7 +223,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                     elif tag_unproductive:
                         daily_totals[task_date]['non_wasted'] += task_seconds
                         if task_seconds/3600 > wasted[project]:
-                            print(task_date, project, task_seconds/3600, wasted[project])
+                            # print(task_date, project, task_seconds/3600, wasted[project])
                             daily_totals[task_date]['wasted'] += task_seconds - wasted[project]*3600
                     elif tag_productive:
                         daily_totals[task_date]['productive'] += task_seconds
@@ -237,7 +237,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                     elif tag_unproductive:
                         daily_totals[task_date]['non_wasted'] += task_seconds
                         if task_seconds/3600 > wasted[project]:
-                            print(task_date, project, task_seconds/3600, wasted[project])
+                            # print(task_date, project, task_seconds/3600, wasted[project])
                             daily_totals[task_date]['wasted'] += task_seconds - wasted[project]*3600
                     else:
                         daily_totals[task_date]['neutral'] += task_seconds
@@ -249,7 +249,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                     else:
                         daily_totals[task_date]['non_wasted'] += task_seconds
                         if task_seconds/3600 > wasted[project]:
-                            print(task_date, project, task_seconds/3600, wasted[project])
+                            # print(task_date, project, task_seconds/3600, wasted[project])
                             daily_totals[task_date]['wasted'] += task_seconds - wasted[project]*3600
         if week:
             for date in sorted(daily_totals.keys()):
