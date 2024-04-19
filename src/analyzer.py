@@ -354,5 +354,5 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
         if week:
             return daily_metrics
         else:
-            return {metric: round(sum(daily_metrics[metric].values())/7,4) for metric in daily_metrics}
+            return {metric: sum(daily_metrics[metric].values()) for metric in daily_metrics}
 
