@@ -42,6 +42,73 @@ class DataLoader:
         if end_date == None:
             end_date = self.today
 
+        data = requests.post(
+            "https://api.track.toggl.com/reports/api/v3/workspace/2167939/search/time_entries",
+            json={
+                "order_by": "date",
+                "order_dir": "ASC",
+                "page_size": 100_000,
+                "start_date": start_date,
+                "end_date": end_date,
+            },
+            headers={"content-type": "application/json"},
+            auth=(self.TOGGL_API_KEY, "api_token"),
+        ).json()
+
+        tag_dic = self._get_tag_list(self.TOGGL_WORKSPACE_ID, self.TOGGL_API_KEY)
+        project_dic = self._get_project_list(
+            self.TOGGL_WORKSPACE_ID, self.TOGGL_API_KEY
+        )
+        # Converting JSON into a list of lists format
+        for dic in data:
+            dic.update(dic["time_entries"][0])
+            dic["tags"] = [tag_dic[tag] for tag in dic["tag_ids"]]
+            dic["end"] = dic.pop("stop")
+            dic["project"] = project_dic[dic.pop("project_id")]
+
+            del dic["tag_ids"]
+            del dic["time_entries"]
+
+        # Data Cleaning and processing
+        ## Creating pandas dataframe from columns and data
+
+        df2 = pd.DataFrame(data)
+        ## Capitalize the first letter of every column
+        df2.columns = [column[0].upper() + column[1:] for column in df2.columns]
+        ## Choosing which columns to be used
+        df2 = df2[["Id", "Project", "Description", "Start", "End", "Tags"]]
+        ## Separating start_date column from start_time column and end_date from end_time
+        df2["Start date"] = np.array([i[:10] for i in df2["Start"].values])
+        df2["End date"] = np.array([i[:10] for i in df2["End"].values])
+        df2["Start time"] = np.array([i[11:19] for i in df2["Start"].values])
+        df2["End time"] = np.array([i[11:19] for i in df2["End"].values])
+        df2["Tags"] = np.array([str(i).strip("''[]") for i in df2["Tags"].values])
+        ## Adding a column that converts the datetime difference into a duration
+        df2["SecDuration"] = self._duration_in_seconds(df2)
+        # df2['Duration']
+        df2 = df2[
+            [
+                "Id",
+                "Project",
+                "Description",
+                "Start date",
+                "Start time",
+                "End date",
+                "End time",
+                "Tags",
+                "SecDuration",
+            ]
+        ]
+
+        return df2
+
+    def old_fetch_data(self, start_date=None, end_date=None, tasks_ago=None):
+        # Assuming they did not pass in a start and end date
+        if start_date == None:
+            start_date = self.today
+        if end_date == None:
+            end_date = self.today
+
         page = 1
         # Parameters used to pass into API
         keys = {
@@ -74,24 +141,20 @@ class DataLoader:
             data += data_point.json()["data"]
         datas2 = []
 
-        # Getting the column names
-        columns = [column[0].upper() + column[1:] for column in data[-1].keys()]
-
         # Converting JSON into a list of lists format
         for i in data:
             datas2.append(list(i.values()))
-
         # Data Cleaning and processing
         ## Creating pandas dataframe from columns and data
-        df2 = pd.DataFrame(datas2, columns=columns)
+        df2 = pd.DataFrame(datas2)
         ## Choosing which columns to be used
         df2 = df2[["Id", "Project", "Description", "Start", "End", "Tags"]]
         ## Separating start_date column from start_time column and end_date from end_time
-        df2["Start date"] = np.array([i[:10] for i in df2["Start"].values])
-        df2["End date"] = np.array([i[:10] for i in df2["End"].values])
-        df2["Start time"] = np.array([i[11:19] for i in df2["Start"].values])
-        df2["End time"] = np.array([i[11:19] for i in df2["End"].values])
-        df2["Tags"] = np.array([str(i).strip("''[]") for i in df2["Tags"].values])
+        df2["Start date"] = np.array([i[:10] for i in df2["start"].values])
+        df2["End date"] = np.array([i[:10] for i in df2["end"].values])
+        df2["Start time"] = np.array([i[11:19] for i in df2["start"].values])
+        df2["End time"] = np.array([i[11:19] for i in df2["end"].values])
+        df2["Tags"] = np.array([str(i).strip("''[]") for i in df2["tags"].values])
         ## Adding a column that converts the datetime difference into a duration
         df2["SecDuration"] = self._duration_in_seconds(df2)
         # df2['Duration']
@@ -112,12 +175,12 @@ class DataLoader:
         return df2
 
     def get_toggl_current_task(self):
-        url = "https://api.track.toggl.com/api/v8/time_entries/current"
+        url = "https://api.track.toggl.com/api/v9/me/time_entries"
         headers = {"content-type": "application/json"}
         api_token = os.getenv("TOGGL_API_KEY")
         # Interacting with API and getting data
         r = requests.get(url, headers=headers, auth=(api_token, "api_token"))
-        data = r.json()["data"]
+        data = r.json()[0]
 
         projects = self._get_project_list(self.TOGGL_EMAIL, self.TOGGL_API_KEY)
 
@@ -207,7 +270,7 @@ class DataLoader:
 
     def _get_project_list(self, account, api_token):
         projects = requests.get(
-            f"https://api.track.toggl.com/api/v8/workspaces/{account}/projects",
+            f"https://api.track.toggl.com/api/v9/workspaces/{account}/projects",
             auth=(api_token, "api_token"),
         )
         projects_list = projects.json()
@@ -215,6 +278,15 @@ class DataLoader:
             project["id"]: project["name"] for project in projects_list
         }
         return project_id_to_name
+
+    def _get_tag_list(self, account, api_token):
+        tags = requests.get(
+            f"https://api.track.toggl.com/api/v9/workspaces/{account}/tags",
+            auth=(api_token, "api_token"),
+        )
+        tags_list = tags.json()
+        tag_id_to_name = {tag["id"]: tag["name"] for tag in tags_list}
+        return tag_id_to_name
 
     def _duration_in_seconds(self, df):
         startdates = df["Start date"] + "-" + df["Start time"]
