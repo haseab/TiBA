@@ -141,20 +141,24 @@ class DataLoader:
             data += data_point.json()["data"]
         datas2 = []
 
+        # Getting the column names
+
+        columns = [column[0].upper() + column[1:] for column in data[-1].keys()]
+
         # Converting JSON into a list of lists format
         for i in data:
             datas2.append(list(i.values()))
         # Data Cleaning and processing
         ## Creating pandas dataframe from columns and data
-        df2 = pd.DataFrame(datas2)
+        df2 = pd.DataFrame(datas2, columns=columns)
         ## Choosing which columns to be used
         df2 = df2[["Id", "Project", "Description", "Start", "End", "Tags"]]
         ## Separating start_date column from start_time column and end_date from end_time
-        df2["Start date"] = np.array([i[:10] for i in df2["start"].values])
-        df2["End date"] = np.array([i[:10] for i in df2["end"].values])
-        df2["Start time"] = np.array([i[11:19] for i in df2["start"].values])
-        df2["End time"] = np.array([i[11:19] for i in df2["end"].values])
-        df2["Tags"] = np.array([str(i).strip("''[]") for i in df2["tags"].values])
+        df2["Start date"] = np.array([i[:10] for i in df2["Start"].values])
+        df2["End date"] = np.array([i[:10] for i in df2["End"].values])
+        df2["Start time"] = np.array([i[11:19] for i in df2["Start"].values])
+        df2["End time"] = np.array([i[11:19] for i in df2["End"].values])
+        df2["Tags"] = np.array([str(i).strip("''[]") for i in df2["Tags"].values])
         ## Adding a column that converts the datetime difference into a duration
         df2["SecDuration"] = self._duration_in_seconds(df2)
         # df2['Duration']
