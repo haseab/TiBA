@@ -186,7 +186,7 @@ class DataLoader:
         r = requests.get(url, headers=headers, auth=(api_token, "api_token"))
         data = r.json()[0]
 
-        projects = self._get_project_list(self.TOGGL_EMAIL, self.TOGGL_API_KEY)
+        projects = self._get_project_list(self.TOGGL_WORKSPACE_ID, self.TOGGL_API_KEY)
 
         project_name = projects[data["pid"]]
         del data["pid"]
