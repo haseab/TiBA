@@ -14,6 +14,7 @@ class AutoGenerator:
     """
     purpose is to automate the generation of weekly reports
     """
+
     def __init__(self):
         # Load environment variables from .env file
         load_dotenv()
@@ -25,12 +26,11 @@ class AutoGenerator:
         self.NOTION_TOKEN_V2 = os.getenv("NOTION_TOKEN_V2")
         self.OPENAI = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.MODEL = "gpt-4-0125-preview"
-        
-        
+
     def get_JSON_from_TXT(self, date):
         """
-        This function will read the txt file using date as the filename 
-        and submit to Open AI's Chat Completion API to get a JSON response 
+        This function will read the txt file using date as the filename
+        and submit to Open AI's Chat Completion API to get a JSON response
         """
         # file format is "2023-08-01 - Daily Report (1)"
         with open(f"{date} - Daily Report (1).txt", "r") as file:
@@ -57,22 +57,17 @@ Some important Characters (for correct spelling):
 
 TEXT:
 
-"""     # make call to openai
+"""  # make call to openai
         response = self.openai.chat.completions.create(
             model=self.model,
             temperature=0,
             max_tokens=1000,
-            messages=[{
-                "role": "system",
-                "content": prompt
-            },
-            {
-                "role": "user",
-                "content": text
-            }],
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": text},
+            ],
         )
-        return response['choices'][0]['message']['content']
-      
+        return response["choices"][0]["message"]["content"]
 
     def extract_whisper(self, date):
         """
@@ -80,17 +75,15 @@ TEXT:
         """
         response = self.get_JSON_from_TXT(date)
         JSON = response
-        df_json = pd.DataFrame(JSON),
+        df_json = (pd.DataFrame(JSON),)
         # store as a dictionary
         JSONs = df_json.to_dict()
-        
+
         return JSONs
-
-
 
 
 # Example code that would be run in order to fetch data
 if __name__ == "__main__":
     pass
-    #file = 'TogglOfficialData-2018-2020.csv'
-    #toggl = TogglApi(file, EMAIL, API_KEY)
+    # file = 'TogglOfficialData-2018-2020.csv'
+    # toggl = TogglApi(file, EMAIL, API_KEY)

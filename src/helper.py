@@ -8,19 +8,23 @@ class Helper:
 
     @staticmethod
     def sum_tags_hours(df2, keyword):
-        bool_list = [True if keyword in tag_list else False for tag_list in df2['Tags'].values]
+        bool_list = [
+            True if keyword in tag_list else False for tag_list in df2["Tags"].values
+        ]
         df2 = df2[bool_list]
         keyword_time = 0
-        for i, j in zip(df2['Tags'].values, df2['SecDuration'].values):
-            for x in i.split(','):
+        for i, j in zip(df2["Tags"].values, df2["SecDuration"].values):
+            for x in i.split(","):
                 if keyword in x:
-                    keyword_time += Helper.fraction_to_float(x.strip(" ''").split(' ')[0])*j
-        return keyword_time/3600
+                    keyword_time += (
+                        Helper.fraction_to_float(x.strip(" ''").split(" ")[0]) * j
+                    )
+        return keyword_time / 3600
 
     @staticmethod
     def fraction_to_float(string):
-        string = string.split('/')
-        return float(string[0])/float(string[1])
+        string = string.split("/")
+        return float(string[0]) / float(string[1])
 
     @staticmethod
     def get_actual_efficiency(loader, analyzer, start_date, end_date):
