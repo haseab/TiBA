@@ -444,7 +444,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                 elif project in wasted:
                     if tag_productive:
                         daily_totals[task_date]["productive"] += task_seconds
-                    if tag_unavoidable:
+                    elif tag_unavoidable:
                         daily_totals[task_date]["neutral"] += task_seconds
                     else:
                         daily_totals[task_date]["non_wasted"] += task_seconds
