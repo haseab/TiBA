@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from notion.block.basic import BulletedListBlock, ToggleBlock
 from notion.client import NotionClient
 
+from dataloader import DataLoader
+
 
 class DataWriter:
     """
@@ -18,6 +20,7 @@ class DataWriter:
         # Load environment variables from .env file
         load_dotenv()
         # Getting the current date
+        self.loader = DataLoader()
         self.today = str(datetime.now())[:10]
         # Fetching secret values from the environment variables
         self.TOGGL_EMAIL = os.getenv("TOGGL_EMAIL")
@@ -25,7 +28,7 @@ class DataWriter:
         self.TOGGL_WORKSPACE_ID = os.getenv("TOGGL_WORKSPACE_ID")
         self.NOTION_TOKEN_V2 = os.getenv("NOTION_TOKEN_V2")
 
-    def get_report_summary(self, start_date, end_date):
+    def get_report_summary(self, start_date, end_date, df):
         skip_projects = [
             "Biking",
             "Crypto",
@@ -44,10 +47,6 @@ class DataWriter:
             "Hygiene",
             "Unavoidable Intermission",
         ]
-
-        url = "https://api.track.toggl.com/reports/api/v2/summary"
-        headers = {"content-type": "application/json"}
-
         report_template_link = os.getenv("NOTION_REPORT_TEMPLATE_LINK")
 
         try:
@@ -58,37 +57,38 @@ class DataWriter:
 
         block = client.get_block(report_template_link)
 
-        # Parameters used to pass into API
-        keys = {
-            "user_agent": self.TOGGL_EMAIL,
-            "workspace_id": self.TOGGL_WORKSPACE_ID,
-            "since": start_date,
-            "until": end_date,
-            "order_field": "duration",
-            "order_desc": "on",
-        }
-
-        r = requests.get(
-            url, params=keys, headers=headers, auth=(self.TOGGL_API_KEY, "api_token")
+        data = (
+            df.groupby(["Project", "Description"])
+            .sum()
+            .reset_index()
+            .sort_values(by=["Project", "SecDuration"], ascending=[True, False])
         )
-        json = r.json()
 
-        for dic in json["data"]:
-            if dic["title"]["project"] in skip_projects or dic["items"] == []:
+        projectGrouped = df.groupby("Project")["SecDuration"].sum().reset_index()
+        projectGroupedSorted = projectGrouped.sort_values(
+            by="SecDuration", ascending=False
+        )
+
+        for project in projectGroupedSorted["Project"].unique():
+            if project in skip_projects:
                 continue
 
-            parent = block.children.add_new(ToggleBlock, title=dic["title"]["project"])
+            parent = block.children.add_new(ToggleBlock, title=project)
 
-            for proj_desc in dic["items"]:
-                string = proj_desc["title"]["time_entry"] + " -- "
-                string += str(round(proj_desc["time"] / 3_600_000, 2)) + "h" + " -- "
+            dataIndexed = data.set_index(["Project", "Description"])
+            # for keys in entry["time_entries"].keys():
+            for description in dataIndexed.loc[project].index:
+                hours = round(
+                    dataIndexed.loc[(project, description), "SecDuration"] / 3600, 2
+                )
+                string = f"{description} -- {hours}h -- "
                 print(string)
                 try:
                     child = parent.children.add_new(BulletedListBlock, title=string)
                 except Exception as e:
                     continue
 
-        return json
+        return data
 
     def _clean(self, data):
         df = data[
@@ -115,8 +115,16 @@ class DataWriter:
             "%Y-%m-%d"
         )
 
-    def _get_project_list(self, df):
-        return list(set(df["Project"].values))
+    def _get_project_list(self, account, api_token):
+        projects = requests.get(
+            f"https://api.track.toggl.com/api/v9/workspaces/{account}/projects",
+            auth=(api_token, "api_token"),
+        )
+        projects_list = projects.json()
+        project_id_to_name = {
+            project["id"]: project["name"] for project in projects_list
+        }
+        return project_id_to_name
 
     def _duration_in_seconds(self, df):
         startdates = df["Start date"] + "-" + df["Start time"]

@@ -82,7 +82,12 @@ class DataLoader:
         df2["End date"] = np.array([i[:10] for i in df2["End"].values])
         df2["Start time"] = np.array([i[11:19] for i in df2["Start"].values])
         df2["End time"] = np.array([i[11:19] for i in df2["End"].values])
-        df2["Tags"] = np.array([str(i).strip("''[]") for i in df2["Tags"].values])
+        df2["Tags"] = np.array(
+            [
+                ", ".join([str(tag).strip("''[]") for tag in tagList])
+                for tagList in df2["Tags"].values
+            ]
+        )
         ## Adding a column that converts the datetime difference into a duration
         df2["SecDuration"] = self._duration_in_seconds(df2)
         # df2['Duration']
