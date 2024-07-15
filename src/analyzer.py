@@ -3,15 +3,68 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 from dotenv import load_dotenv
+from google.oauth2 import service_account
+
 from gcsa.google_calendar import GoogleCalendar
 
 from helper import Helper as helper
+import json
 
 
 class Analyzer:
     def __init__(self):
         load_dotenv()
-        self.unplanned = GoogleCalendar(os.getenv("UNPLANNED_CALENDAR_ID"))
+        # credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        google_app_type=os.getenv("GOOGLE_APP_TYPE")
+        google_app_project_id=os.getenv("GOOGLE_APP_PROJECT_ID")
+        google_app_private_key_id=os.getenv("GOOGLE_APP_PRIVATE_KEY_ID")
+        google_app_private_key=os.getenv("GOOGLE_APP_PRIVATE_KEY")
+        google_app_client_email=os.getenv("GOOGLE_APP_CLIENT_EMAIL")
+        google_app_client_id=os.getenv("GOOGLE_APP_CLIENT_ID")
+        google_app_auth_uri=os.getenv("GOOGLE_APP_AUTH_URI")
+        google_app_token_uri=os.getenv("GOOGLE_APP_TOKEN_URI")
+        google_app_auth_provider_x509_cert_url=os.getenv("GOOGLE_APP_AUTH_PROVIDER_X509_CERT_URL")
+        google_app_client_x509_cert_url=os.getenv("GOOGLE_APP_CLIENT_X509_CERT_URL")
+        google_app_universe_domain=os.getenv("GOOGLE_APP_UNIVERSE_DOMAIN")
+
+        # if any of the above variables are None, raise an error
+        if None in [google_app_type, google_app_project_id, google_app_private_key_id, google_app_private_key, google_app_client_email, google_app_client_id, google_app_auth_uri, google_app_token_uri, google_app_auth_provider_x509_cert_url, google_app_client_x509_cert_url, google_app_universe_domain]:
+            # print all the variables that are None
+            print("One or more of the required environment variables are not set")
+            print("google_app_type: ", google_app_type)
+            print("google_app_project_id: ", google_app_project_id)
+            print("google_app_private_key_id: ", google_app_private_key_id)
+            print("google_app_private_key: ", google_app_private_key)
+            print("google_app_client_email: ", google_app_client_email)
+            print("google_app_client_id: ", google_app_client_id)
+            print("google_app_auth_uri: ", google_app_auth_uri)
+            print("google_app_token_uri: ", google_app_token_uri)
+            print("google_app_auth_provider_x509_cert_url: ", google_app_auth_provider_x509_cert_url)
+            print("google_app_client_x509_cert_url: ", google_app_client_x509_cert_url)
+            print("google_app_universe_domain: ", google_app_universe_domain)
+            raise ValueError("One or more of the required environment variables are not set")
+
+        credentials = {
+            "type": google_app_type,
+            "project_id": google_app_project_id,
+            "private_key_id": google_app_private_key_id,
+            "private_key": google_app_private_key,
+            "client_email": google_app_client_email,
+            "client_id": google_app_client_id,
+            "auth_uri": google_app_auth_uri,
+            "token_uri": google_app_token_uri,
+            "auth_provider_x509_cert_url": google_app_auth_provider_x509_cert_url,
+            "client_x509_cert_url": google_app_client_x509_cert_url,
+            "universe_domain": google_app_universe_domain
+        }
+
+        self.credentials = self.load_credentials(credentials)
+
+        self.unplanned = GoogleCalendar(
+            default_calendar=os.getenv("UNPLANNED_CALENDAR_ID"),
+            credentials=self.credentials,
+        )
+
         self.wasted = {
             "Trading": 2,
             "TV Show": 0,
@@ -100,6 +153,12 @@ class Analyzer:
             "Formal Working",
             "Emailing",
         ]
+    
+    def load_credentials(self, credentials):
+        print("TYPE OF CREDENTIALS")
+        print(type(credentials))
+        return service_account.Credentials.from_service_account_info(info=credentials)
+
 
     def max_mindful_slow(self, data):
         mindful_whitelist = ["Sleep", "Concentration", "Under Influence"]
@@ -159,17 +218,46 @@ class Analyzer:
 
         return round(max_mindful / 3600, 2), round(max_slow / 3600, 2)
 
+    # def prev_week(self, start_date, end_date, times=0):
+    #     if times == 0:
+    #         return start_date, end_date
+    #     if times == 1:
+    #         datetimes = pd.date_range(start_date, end_date).to_pydatetime()
+    #         return (
+    #             str(datetimes[0] - timedelta(days=7))[:10],
+    #             str(datetimes[-1] - timedelta(days=7))[:10],
+    #         )
+    #     start_date, end_date = self.prev_week(start_date, end_date)
+    #     return self.prev_week(start_date, end_date, times - 1)
+
     def prev_week(self, start_date, end_date, times=1):
+        """
+        Calculate the date range of the 'times' previous weeks from a given date range.
+
+        Parameters:
+            start_date (str): The start date in 'YYYY-MM-DD' format.
+            end_date (str): The end date in 'YYYY-MM-DD' format.
+            times (int): The number of weeks back to calculate the date range.
+
+        Returns:
+            tuple: A tuple containing the start and end dates of the calculated previous week range as strings.
+        """
+        # Base case: if times is 0, return the original dates
         if times == 0:
             return start_date, end_date
-        if times == 1:
-            datetimes = pd.date_range(start_date, end_date).to_pydatetime()
-            return (
-                str(datetimes[0] - timedelta(days=7))[:10],
-                str(datetimes[-1] - timedelta(days=7))[:10],
-            )
-        start_date, end_date = self.prev_week(start_date, end_date)
-        return self.prev_week(start_date, end_date, times - 1)
+
+        # Convert start_date and end_date to datetime objects
+        start_date_dt = pd.to_datetime(start_date)
+        end_date_dt = pd.to_datetime(end_date)
+
+        # Calculate the start and end dates of the previous week
+        start_date_prev = start_date_dt - timedelta(weeks=1)
+        end_date_prev = end_date_dt - timedelta(weeks=1)
+
+        # Recursive call to handle multiple weeks
+        return self.prev_week(
+            str(start_date_prev)[:10], str(end_date_prev)[:10], times - 1
+        )
 
     def get_all_current_events(self, cal_dic):
         date_before = datetime.now().astimezone()
@@ -217,14 +305,16 @@ class Analyzer:
                 daily_totals[event_day] += duration.total_seconds()
 
         # If week=True, return the daily totals as a list
-        if week:
-            return {
+        week_totals = {
                 date: round(daily_totals[date] / 3600, 3)
                 for date in sorted(daily_totals.keys())
             }
+        
+        if week:
+            return week_totals
 
         # Otherwise, return the total duration for the period
-        return round(total_duration / 3600, 3)
+        return sum(week_totals.values())
 
     def slow_mindful_scores(self, data):
         actual_mindful_hours = helper.sum_tags_hours(data, "Mindfulness")
@@ -405,7 +495,13 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
 
             neg_dic = ["Sleep"]
             if task_seconds > 60 * flow_threshold and project not in neg_dic:
-                # print(task_date, project, time_df.loc[index, 'Start time'], time_df.loc[index, "Description"][:30], task_seconds/3600)
+                # print(
+                #     task_date,
+                #     project,
+                #     time_df.loc[index, "Start time"],
+                #     time_df.loc[index, "Description"][:30],
+                #     task_seconds / 3600,
+                # )
                 # print(tag_productive, tag_unavoidable)
                 if project in productive:
                     if tag_unavoidable:
@@ -520,7 +616,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
         data["SecDuration"] = data["SecDuration"].astype(int)
         grouped_data = (
             data.groupby(["Start date", "Project", "TagProductive", "TagUnavoidable"])
-            .sum()
+            .sum(numeric_only=True)
             .reset_index()
         )
 
@@ -579,16 +675,20 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
 
         # Calculating hours free and efficiency for each day and adding to daily_metrics
         for date in daily_metrics["hours_free"]:
-            daily_metrics["efficiency"][date] = round(
-                daily_metrics["productive"][date] / daily_metrics["hours_free"][date], 4
-            )
-            daily_metrics["inefficiency"][date] = round(
-                daily_metrics["wasted"][date] / daily_metrics["hours_free"][date], 4
-            )
+            if (daily_metrics["hours_free"][date]) != 0:
+                daily_metrics["efficiency"][date] = round(
+                    daily_metrics["productive"][date]
+                    / daily_metrics["hours_free"][date],
+                    4,
+                )
+                daily_metrics["inefficiency"][date] = round(
+                    daily_metrics["wasted"][date] / daily_metrics["hours_free"][date], 4
+                )
 
         if week:
             return daily_metrics
         else:
             return {
-                metric: sum(daily_metrics[metric].values()) for metric in daily_metrics
+                metric: round(sum(daily_metrics[metric].values()), 4)
+                for metric in daily_metrics
             }
