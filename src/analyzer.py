@@ -8,12 +8,20 @@ from google.oauth2 import service_account
 from gcsa.google_calendar import GoogleCalendar
 
 from helper import Helper as helper
-import json
+from dotenv import load_dotenv
+from sqlalchemy import create_engine, func
+from sqlalchemy.orm import sessionmaker
+import math
+
+from models import Base, KeyboardShortcut
 
 
 class Analyzer:
     def __init__(self):
         load_dotenv()
+        DATABASE_URL = os.getenv("DATABASE_URL")
+        print("Creating engine and initializing database")
+        engine = create_engine(DATABASE_URL)
         # credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         google_app_type=os.getenv("GOOGLE_APP_TYPE")
         google_app_project_id=os.getenv("GOOGLE_APP_PROJECT_ID")
@@ -26,6 +34,7 @@ class Analyzer:
         google_app_auth_provider_x509_cert_url=os.getenv("GOOGLE_APP_AUTH_PROVIDER_X509_CERT_URL")
         google_app_client_x509_cert_url=os.getenv("GOOGLE_APP_CLIENT_X509_CERT_URL")
         google_app_universe_domain=os.getenv("GOOGLE_APP_UNIVERSE_DOMAIN")
+        
 
         # if any of the above variables are None, raise an error
         if None in [google_app_type, google_app_project_id, google_app_private_key_id, google_app_private_key, google_app_client_email, google_app_client_id, google_app_auth_uri, google_app_token_uri, google_app_auth_provider_x509_cert_url, google_app_client_x509_cert_url, google_app_universe_domain]:
@@ -57,6 +66,7 @@ class Analyzer:
             "client_x509_cert_url": google_app_client_x509_cert_url,
             "universe_domain": google_app_universe_domain
         }
+        
 
         self.credentials = self.load_credentials(credentials)
 
@@ -64,6 +74,9 @@ class Analyzer:
             default_calendar=os.getenv("UNPLANNED_CALENDAR_ID"),
             credentials=self.credentials,
         )
+
+        Session = sessionmaker(bind=engine)
+        self.session = Session()
 
         self.wasted = {
             "Trading": 2,
@@ -315,7 +328,7 @@ class Analyzer:
 
         # Otherwise, return the total duration for the period
         return sum(week_totals.values())
-
+    
     def slow_mindful_scores(self, data):
         actual_mindful_hours = helper.sum_tags_hours(data, "Mindfulness")
         actual_slow_hours = helper.sum_tags_hours(data, "Slowness")
@@ -458,6 +471,31 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
             ]
         ]
         return grouped
+    
+    def calculate_distraction_counts(self, start_date, end_date, week=False):
+            # Getting Distraction Data
+        start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
+        end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+
+        daily_counts = self.session.query(
+            func.date(KeyboardShortcut.time).label('date'),
+            func.count(KeyboardShortcut.keyboard_shortcut).label('count')
+        ).filter(
+            KeyboardShortcut.keyboard_shortcut == 'Command + `',
+            KeyboardShortcut.time.between(start_datetime, end_datetime)
+        ).group_by(
+            func.date(KeyboardShortcut.time)
+        ).order_by(
+            func.date(KeyboardShortcut.time)
+        ).all()
+
+        self.session.close()
+
+        distraction_counts = {str(count[0]): math.ceil(count[1] / 2) for count in daily_counts}
+        if week:
+            return distraction_counts
+        else:
+            return sum(distraction_counts.values())
 
     def calculate_1HUT(self, time_df, week=False):
         # display(Markdown("## p1HUT: Productive >1H Uninterrupted Time"))
