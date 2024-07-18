@@ -581,12 +581,14 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                     elif tag_unavoidable:
                         daily_totals[task_date]["neutral"] += task_seconds
                     else:
-                        daily_totals[task_date]["non_wasted"] += task_seconds
                         if task_seconds / 3600 > wasted[project]:
                             # print(task_date, project, task_seconds/3600, wasted[project])
+                            daily_totals[task_date]["non_wasted"] += wasted[project] * 3600
                             daily_totals[task_date]["wasted"] += (
                                 task_seconds - wasted[project] * 3600
                             )
+                        else:
+                            daily_totals[task_date]["non_wasted"] += task_seconds
         if week:
             for date in sorted(daily_totals.keys()):
                 day_data = daily_totals[date]
