@@ -20,8 +20,10 @@ class Analyzer:
     def __init__(self):
         load_dotenv()
         DATABASE_URL = os.getenv("DATABASE_URL")
+        print(os.getenv('DATABASE_URL'))
         print("Creating engine and initializing database")
         engine = create_engine(DATABASE_URL)
+        self.engine = engine
         # credentials = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
         google_app_type=os.getenv("GOOGLE_APP_TYPE")
         google_app_project_id=os.getenv("GOOGLE_APP_PROJECT_ID")

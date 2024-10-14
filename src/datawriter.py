@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import requests
 from dotenv import load_dotenv
-from notion.block.basic import BulletedListBlock, ToggleBlock
+from notion.block import BulletedListBlock, ToggleBlock
 from notion.client import NotionClient
 
 from dataloader import DataLoader

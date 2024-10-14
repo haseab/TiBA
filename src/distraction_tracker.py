@@ -208,6 +208,21 @@ def on_press(key):
                             ]
                         )
                         break  # Exit the loop once a match is found
+            
+            # Check for Command + F3
+            if keyboard.Key.f3 in current_keys and keyboard.Key.cmd in current_keys:
+                print(
+                    f"Command + F3 Keyboard Shortcut Pressed at {datetime.datetime.now()}"
+                )
+                df = pd.concat(
+                    [
+                        df,
+                        pd.DataFrame(
+                            [[f"Command + F3", datetime.datetime.now()]],
+                            columns=["Keyboard Shortcut", "Time"],
+                        ),
+                    ]
+                )
 
         df.to_csv(
             "/Users/haseab/Desktop/Desktop/backed-up/backed-scripts/Python/TiBA/src/keyboard_shortcut_launches.csv",
