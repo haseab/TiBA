@@ -19,15 +19,13 @@ class DataLoader:
         # Load environment variables from .env file
         load_dotenv()
 
-        # Getting the current date
-        self.today = str(datetime.now())[:10]
         # Fetching secret values from the environment variables
         self.TOGGL_EMAIL = os.getenv("TOGGL_EMAIL")
         self.TOGGL_API_KEY = os.getenv("TOGGL_API_KEY")
         self.TOGGL_WORKSPACE_ID = os.getenv("TOGGL_WORKSPACE_ID")
         self.NOTION_TOKEN_V2 = os.getenv("NOTION_TOKEN_V2")
 
-    def fetch_data(self, start_date=None, end_date=None, tasks_ago=None):
+    def fetch_data(self, start_date=None, end_date=None, tasks_ago=None, timezone="America/New_York"):
         """
         Interacts with Toggl REST API and gets the minute data from the date range given.
         If start and end date are the same, the data for that day will be shown (non-inclusive)
@@ -37,10 +35,17 @@ class DataLoader:
         :return: pandas dataframe, the time data
         """
         # Assuming they did not pass in a start and end date
+
+        now_utc = datetime.now(pytz.utc)
+        zone = pytz.timezone(timezone)
+        now = now_utc.astimezone(zone)
+
         if start_date == None:
-            start_date = self.today
+            start_date = str(now)[:10]
         if end_date == None:
-            end_date = self.today
+            end_date = str(now)[:10]
+
+        print("start date", start_date, "end date", end_date)
 
         data = requests.post(
             f"https://api.track.toggl.com/reports/api/v3/workspace/{self.TOGGL_WORKSPACE_ID}/search/time_entries",
@@ -55,10 +60,12 @@ class DataLoader:
             auth=(self.TOGGL_API_KEY, "api_token"),
         ).json()
 
+
         tag_dic = self._get_tag_list(self.TOGGL_WORKSPACE_ID, self.TOGGL_API_KEY)
         project_dic = self._get_project_list(
             self.TOGGL_WORKSPACE_ID, self.TOGGL_API_KEY
         )
+
         # Converting JSON into a list of lists format
         for dic in data:
             dic.update(dic["time_entries"][0])
@@ -75,6 +82,7 @@ class DataLoader:
         df2 = pd.DataFrame(data)
         ## Capitalize the first letter of every column
         df2.columns = [column[0].upper() + column[1:] for column in df2.columns]
+
         ## Choosing which columns to be used
         df2 = df2[["Id", "Project", "Description", "Start", "End", "Tags"]]
         ## Separating start_date column from start_time column and end_date from end_time
@@ -110,9 +118,9 @@ class DataLoader:
     def old_fetch_data(self, start_date=None, end_date=None, tasks_ago=None):
         # Assuming they did not pass in a start and end date
         if start_date == None:
-            start_date = self.today
+            start_date = str(datetime.now())[:10]
         if end_date == None:
-            end_date = self.today
+            end_date = str(datetime.now())[:10]
 
         page = 1
         # Parameters used to pass into API
@@ -183,7 +191,7 @@ class DataLoader:
 
         return df2
 
-    def get_toggl_current_task(self):
+    def get_toggl_current_task(self, timezone="America/New_York"):
         url = "https://api.track.toggl.com/api/v9/me/time_entries"
         headers = {"content-type": "application/json"}
         api_token = os.getenv("TOGGL_API_KEY")
@@ -210,14 +218,14 @@ class DataLoader:
         df2 = pd.DataFrame([data.values()], columns=columns)
 
         df2["Start"] = pd.to_datetime(df2["Start"], utc=True)
-        df2["Start"] = df2["Start"].dt.tz_convert("Canada/Eastern").dt.tz_localize(None)
+        df2["Start"] = df2["Start"].dt.tz_convert(timezone).dt.tz_localize(None)
 
         df2 = df2.drop("At", axis=1)
 
         df2["End"] = datetime.utcnow().replace(
             tzinfo=pytz.utc
         )  # Make 'End' timezone aware
-        df2["End"] = df2["End"].dt.tz_convert("Canada/Eastern").dt.tz_localize(None)
+        df2["End"] = df2["End"].dt.tz_convert(timezone).dt.tz_localize(None)
 
         secDuration = float((df2["End"] - df2["Start"]).dt.total_seconds())
 
@@ -228,7 +236,8 @@ class DataLoader:
         df2["Start time"] = np.array([str(i)[11:19] for i in df2["Start"].values])
         df2["End time"] = np.array([str(i)[11:19] for i in df2["End"].values])
 
-        df2["Tags"] = [""]
+        df2["Tags"] = df2["Tags"].apply(lambda tags: ', '.join(tags))
+
         df2 = df2[
             [
                 "Id",
