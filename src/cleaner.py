@@ -56,7 +56,7 @@ class Cleaner:
             "Food Prep/Clean/Order",
             "Showering",
             "Unavoidable Family Matters",
-            "Sleep",
+            "Resting",
             "Shopping",
             "Biking",
             "Under Influence",
@@ -177,7 +177,7 @@ class Cleaner:
             for index in time_df.index:
                 task_seconds = int(time_df.loc[index, "SecDuration"])
                 project = time_df.loc[index, "Project"]
-                neg_dic = ["Sleep"]
+                neg_dic = ["Resting"]
                 if task_seconds > 3600 and project not in neg_dic:
                     if project in productive:
                         print("Productive:", project, timedelta(seconds=task_seconds))

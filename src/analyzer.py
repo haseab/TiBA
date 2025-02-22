@@ -172,7 +172,7 @@ class Analyzer:
             "Food Prep/Clean/Order",
             "Showering",
             "Unavoidable Family Matters",
-            "Sleep",
+            "Resting",
             "Shopping",
             "Biking",
             "Under Influence",
@@ -219,7 +219,7 @@ class Analyzer:
 
 
     def max_mindful_slow(self, data):
-        mindful_whitelist = ["Sleep", "Concentration", "Under Influence"]
+        mindful_whitelist = ["Resting", "Concentration", "Under Influence"]
         slow_whitelist = [
             "Concentration",
             "Crypto",
@@ -237,7 +237,7 @@ class Analyzer:
             "Researching",
             "Skill Learning",
             "Social Media",
-            "Sleep",
+            "Resting",
             "Sports",
             "Thinking",
             "Transportation",
@@ -660,7 +660,7 @@ actual slow (hours)    : {round(actual_slow_hours, 3)}
                     "wasted": 0,
                 }
 
-            neg_dic = ["Sleep"]
+            neg_dic = ["Resting"]
             if task_seconds > 60 * flow_threshold and project not in neg_dic:
                 # print(
                 #     task_date,

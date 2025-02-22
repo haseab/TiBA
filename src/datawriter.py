@@ -39,7 +39,7 @@ class DataWriter:
             "Location",
             "Maintaining",
             "Showering",
-            "Sleep",
+            "Resting",
             "Spiritual",
             "Tracking",
             "Transportation",
