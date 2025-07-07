@@ -140,7 +140,7 @@ class Analyzer:
             "Movie": 0,
             "Calling": 1,
             "Dating": 3,
-            "YouTube": 0.5,
+            "Watching": 0.5,
             "News": 1,
             "Under Influence": 1,
             "Gaming": 0,
@@ -244,7 +244,7 @@ class Analyzer:
             "TV Show",
             "Under Influence",
             "Recalling",
-            "YouTube",
+            "Watching",
         ]
 
         week_summary = data[["Project", "SecDuration"]].groupby(by="Project").sum()

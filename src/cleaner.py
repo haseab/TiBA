@@ -24,7 +24,7 @@ class Cleaner:
             "Movie": 0,
             "Calling": 1,
             "Dating": 3,
-            "YouTube": 0.5,
+            "Watching": 0.5,
             "News": 1,
             "Under Influence": 1,
             "Gaming": 0,

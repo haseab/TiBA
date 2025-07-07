@@ -321,6 +321,47 @@ class DataLoader:
         unixE = pd.DatetimeIndex(enddates).astype(np.int64) // 10**9
         return unixE - unixS
 
+    def get_last_time_entry(self):
+        """
+        Fetches the last time entry from Toggl API in a simple JSON format.
+        
+        Returns:
+            dict: A dictionary containing the last time entry with basic information
+        """
+        response = requests.post(
+            f"https://api.track.toggl.com/reports/api/v3/workspace/{self.TOGGL_WORKSPACE_ID}/search/time_entries",
+            json={
+                "order_by": "date",
+                "order_dir": "DESC",  # Get most recent first
+                "page_size": 1,  # Only get the last entry
+            },
+            headers={"content-type": "application/json"},
+            auth=(self.TOGGL_API_KEY, "api_token"),
+        ).json()
+
+        if not response:
+            return None
+
+        # Get the first (and only) entry
+        entry = response[0]
+        time_entry = entry["time_entries"][0]
+
+        # Get project and tag names
+        project_dic = self._get_project_list(self.TOGGL_WORKSPACE_ID, self.TOGGL_API_KEY)
+        tag_dic = self._get_tag_list(self.TOGGL_WORKSPACE_ID, self.TOGGL_API_KEY)
+
+        # Create simplified response
+        simplified_entry = {
+            "id": time_entry["id"],
+            "project": project_dic.get(time_entry["project_id"], "Unknown Project"),
+            "description": time_entry.get("description", ""),
+            "start": time_entry["start"],
+            "end": time_entry["stop"],
+            "tags": [tag_dic.get(tag_id, "Unknown Tag") for tag_id in time_entry.get("tag_ids", [])]
+        }
+
+        return simplified_entry
+
 
 # Example code that would be run in order to fetch data
 if __name__ == "__main__":
