@@ -79,7 +79,7 @@ class Cleaner:
             "Organizing",
             "Event",
             "Business",
-            "Book",
+            "Reading",
             "Report",
             "Crypto",
             "Helping/Giving",
